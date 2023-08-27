@@ -2,6 +2,7 @@
     "files.associations": {
         "multiboot.h": "c",
         "setup.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "vga.h": "c"
     }
 }

@@ -1,16 +1,19 @@
 {
   "version": "0.2.0",
   "configurations": [
-      {
-          "type": "gdb",
-          "request": "attach",
-          "name": "Attach to QEMU",
-          "executable": "${workspaceRoot}/build/bin/melox.bin",
-          "target": ":1234",
-          "remote": true,
-          "cwd": "${workspaceRoot}",
-          "valuesFormatting": "parseText",
-          "preLaunchTask": "Launch MELOX"
-      }
+    {
+      "name": "debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/bin/melox.bin",
+      "miDebuggerServerAddress": "127.0.0.1:1234",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "preLaunchTask": "run"
+    }
   ]
 }
