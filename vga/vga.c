@@ -11,18 +11,19 @@ void vga_put_char(char c)
 {
     if(c == '\n')
     {
-    newline:
-        XPOS = 0;
         YPOS++;
+        XPOS = 0;
     }else if(c == '\r')
         XPOS = 0;
     else{
         *(video + XPOS + YPOS * WIDTH) = (theme_color | c);
+        XPOS++;
     }
-
-    XPOS++;
     if (XPOS >= WIDTH)
-        goto newline;
+    {
+        YPOS++;
+        XPOS = 0;
+    }
 }
 
 void vga_set_show(vga_attr flashing, vga_attr backgroud, vga_attr frontcolor)

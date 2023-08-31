@@ -33,7 +33,7 @@ $(BIN_DIR)/$(OS_BIN): $(OBJECT_DIR) $(BIN_DIR) $(SRC)
 	@$(CC) -T linker.ld -o $(BIN_DIR)/$(OS_BIN) $(SRC) $(LDFLAGS)
 
 $(BUILD_DIR)/$(OS_ISO): $(ISO_DIR) $(BIN_DIR)/$(OS_BIN) GRUB_TEMPLATE
-	./config-grub.sh ${OS_NAME} $(ISO_GRUB_DIR)/grub.cfg
+	./config-grub.sh ${OS_NAME} > $(ISO_GRUB_DIR)/grub.cfg
 	@cp $(BIN_DIR)/$(OS_BIN) $(ISO_BOOT_DIR)
 	@grub-mkrescue -o $(BUILD_DIR)/$(OS_ISO) $(ISO_DIR)
 

@@ -9,7 +9,6 @@ SECTIONS {
         * (.text)
     }
 
-
     .bss BLOCK(4K) : {
         *(COMMON)
         * (.bss)

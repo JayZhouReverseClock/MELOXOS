@@ -18,20 +18,47 @@
         .skip STACK_SIZE, 0
     stack_top:
 
+
 .section .multiboot_entry
     .global start
     .type start, @function
 
     start:
         movl $stack_top, %esp
-        push %ebx
-        push %eax
-        call _kernel_init
+        call _init_gdt
+        call _init_idt
 
-        cli
+        pushl $_gdt
+        pushw _gdt_limit
+        lgdt (%esp)
+
+        movl $_idt, 2(%esp)
+        movw _idt_limit, %ax
+        movw %ax, (%esp)
+        lidt (%esp)
+        popw %ax
+        popl %eax
+
+
+        movw $0x10, %cx
+        movw %cx, %es
+        movw %cx, %ds
+        movw %cx, %fs
+        movw %cx, %gs
+        movw %cx, %ss
+
+        pushw $0x08
+        pushl $_after_gdt
+        retf
+
+    _after_gdt:
+        pushl %ebx
+        pushl %eax
+        call _kernel_init
 
     loop:   hlt
         jmp     loop
+
 
 
 
