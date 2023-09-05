@@ -2,7 +2,7 @@
 
 #define GDT_ENTRY 5
 
-uint64_t _gdt[GDT_ENTRY];
+uint64_t _gdt[5];
 uint16_t _gdt_limit = sizeof(_gdt) - 1;
 
 void _set_gdt_entry(uint32_t index, uint32_t base, uint32_t limit, uint32_t flags) {

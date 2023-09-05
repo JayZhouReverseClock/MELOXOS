@@ -1,6 +1,6 @@
 #include <init/idt.h>
-#include <kernel/interupt_fun.h>
-#define IDT_ENTRY 32
+#include <kernel/interrupt/interupt_fun.h>
+#define IDT_ENTRY 80
 
 uint64_t _idt[IDT_ENTRY];
 uint16_t _idt_limit = sizeof(_idt) - 1;

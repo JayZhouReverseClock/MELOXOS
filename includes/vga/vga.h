@@ -25,3 +25,5 @@ void vga_put_char(char c);
 void vga_put_str(char* str);
 void vga_set_show(vga_attr flashing, vga_attr backgroud, vga_attr frontcolor);
 void vga_clear();
+void set_vga_buffer(void* vga_buf);
+void init_vga_buffer();
