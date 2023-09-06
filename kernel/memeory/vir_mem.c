@@ -1,5 +1,5 @@
 #include <kernel/memory/vir_mem.h>
-#include <libs/string.h>
+#include <libs/mstring.h>
 
 void vmm_init() {
     // TODO: something here?

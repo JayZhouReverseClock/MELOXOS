@@ -1336,7 +1336,7 @@ c0106810:	c3                   	ret
 
 c0106811 <vmm_init>:
 #include <kernel/memory/vir_mem.h>
-#include <libs/string.h>
+#include <libs/mstring.h>
 
 void vmm_init() {
 c0106811:	55                   	push   %ebp
@@ -3255,7 +3255,7 @@ c01076f3:	c9                   	leave
 c01076f4:	c3                   	ret    
 
 c01076f5 <memset>:
-#include <libs/string.h>
+#include <libs/mstring.h>
 #include <stdint.h>
 
 void* memset(void* ptr, int value, size_t num)

@@ -1,4 +1,4 @@
-#include <libs/string.h>
+#include <libs/mstring.h>
 #include <stdint.h>
 
 void* memset(void* ptr, int value, size_t num)
