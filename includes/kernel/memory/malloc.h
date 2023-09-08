@@ -1,4 +1,8 @@
 #include <stddef.h>
+#include <stdint.h>
+#include <kernel/memory/page.h>
+#include <kernel/memory/vir_mem.h>
+#include <kernel/memory/phy_mem.h>
 // Basic contans and macros
 #define WSIZE 4
 #define DSIZE 8
@@ -57,5 +61,5 @@ void malloc_free(void* bp);
  * 
  * @param malloc size
  */
-void k_malloc(size_t size);
+void* k_malloc(size_t size);
 

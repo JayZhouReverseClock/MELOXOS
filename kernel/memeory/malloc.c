@@ -1,10 +1,10 @@
 #include <kernel/memory/malloc.h>
 //declar some private variables
 static char* heap_listp;
-static char* mem_heap; //points to first bytes ofheap
+static char* mem_heap; //points to first bytes of heap
 static char* mem_brk;  //points to last bytes of heap plus 1
 static char* mem_max_addr; // max legal heap addr plus 1
-
+extern uint32_t __heap_start;
 //some static functions
 /**
  * @brief extend heap
@@ -110,9 +110,15 @@ static void place(void* bp, size_t asize)
 
 void mem_init()
 {
-    mem_heap = (char*)Malloc(MAX_HEAP);
+    mem_heap = &__heap_start;
+    //mem_heap = (char*)Malloc(MAX_HEAP);
     mem_brk = (char*)mem_heap;
-    mem_max_addr = (char*)(mem_heap + MAX_HEAP);
+    //mem_max_addr = (char*)(mem_heap + MAX_HEAP);
+    mem_max_addr = (char*)K_STACK_START;
+    
+    if(vmm_alloc_page(mem_brk, PG_PREM_RW, PG_PREM_RW) == NULL)
+        return;
+    malloc_init();
 }
 
 void* mem_sbrk(int incr)
@@ -126,7 +132,7 @@ void* mem_sbrk(int incr)
     return (void*)old;
 }
 
-void malloc_init()
+int malloc_init()
 {
     if((heap_listp = mem_sbrk(4 * WSIZE)) == (void*) - 1)
         return -1;

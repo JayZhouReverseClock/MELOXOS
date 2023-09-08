@@ -47,5 +47,5 @@ SECTIONS {
     }
 
     virkernel_end = ALIGN(4K);
-    __heap_start = ALIGN(4K);    /* 内核结束的地方即堆开始的地方 */
+    __heap_start = ALIGN(4K);    /* the begin of heap */
 }
