@@ -4,7 +4,13 @@ static char* heap_listp;
 static char* mem_heap; //points to first bytes of heap
 static char* mem_brk;  //points to last bytes of heap plus 1
 static char* mem_max_addr; // max legal heap addr plus 1
-extern uint32_t __heap_start;
+extern uint8_t __heap_start;
+
+static void* coalesce(void* bp);
+static void* extend_heap(size_t words);
+static void* find_fit(size_t asize);
+static void place(void* bp, size_t asize);
+
 //some static functions
 /**
  * @brief extend heap
@@ -13,16 +19,16 @@ extern uint32_t __heap_start;
  */
 static void* extend_heap(size_t words)
 {
-    char* bp;
+    char* bp = mem_brk;
     size_t size;
-
     //align
-    size = (words % 2) ? (words + 1) * WSIZE : words * WSIZE;
+    size = (words % 2) ? words * WSIZE : (words + 1) * WSIZE;
+    mem_sbrk(size + WSIZE);
 
     //initialize free block header/footer and the epilogue header
     PUT(HDRP(bp), PACK(size, 0)); // free block header
-    PUT(FTRP(bp), PACK(size, 0)); // free block foot
-    PUT(HDPR(NEXT_BLKP(bp)), PACK(0, 1)); //NEW Epilogue header
+    PUT(FTRP(bp), PACK(size, 0)); // free block foot //TODO CRUSH HERE, ADD ONE PAGE OUT OF RANGE, WE ONLY GIVE ONE PAGE, MEYBE PAGE FAULT
+    PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1)); //NEW Epilogue header
 
     //Coalesce if previous block is free
     return coalesce(bp);
@@ -51,7 +57,7 @@ static void* coalesce(void* bp)
 
     else if(!prev_alloc && next_alloc)
     {
-        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));//TO DO ,THERE IS PEOBLEM, CRUSH HERE
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
@@ -112,12 +118,13 @@ void mem_init()
 {
     mem_heap = &__heap_start;
     //mem_heap = (char*)Malloc(MAX_HEAP);
-    mem_brk = (char*)mem_heap;
+    mem_brk = mem_heap;
     //mem_max_addr = (char*)(mem_heap + MAX_HEAP);
     mem_max_addr = (char*)K_STACK_START;
-    
-    if(vmm_alloc_page(mem_brk, PG_PREM_RW, PG_PREM_RW) == NULL)
+    uint8_t* pgaddr = 0;
+    if((pgaddr = vmm_alloc_page(mem_brk, PG_PREM_RW, PG_PREM_RW)) == NULL)
         return;
+    kprintf("malloc init phy address is 0x%x\n", pgaddr);
     malloc_init();
 }
 
@@ -127,6 +134,17 @@ void* mem_sbrk(int incr)
     if((incr < 0) || ((mem_brk + incr) > mem_max_addr))
     {
         return (void*)-1;
+    }
+    char* new = mem_brk + incr;
+    unsigned int diff = PG_ALIGN(new) - PG_ALIGN(old);
+    if(diff)
+    {
+        uint8_t* pgaddr = -1;
+        if(!(pgaddr = vmm_alloc_page(new,PG_PREM_RW,PG_PREM_RW)))
+        {
+            return NULL;
+        }
+        kprintf("head new page is 0x%x\n", pgaddr);
     }
     mem_brk += incr;
     return (void*)old;
@@ -143,7 +161,8 @@ int malloc_init()
     heap_listp += (2*WSIZE);
 
     //extend free heap with free blk og CHUNKSIZE size
-    if(extend_heap(CHUNKSIZE / WSIZE) == NULL)
+    //mem_sbrk((CHUNKSIZE - WSIZE));
+    if(extend_heap((CHUNKSIZE - WSIZE)  / WSIZE) == NULL)
         return -1;
     return 0;
 }

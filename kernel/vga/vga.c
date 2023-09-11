@@ -34,6 +34,8 @@ void vga_put_char(char c)
         YPOS++;
         XPOS = 0;
     }
+    if(YPOS >= HIGHT)
+        vga_scrollup();
 }
 
 void vga_set_show(vga_attr flashing, vga_attr backgroud, vga_attr frontcolor)
@@ -58,4 +60,16 @@ void vga_clear()
 
     XPOS = 0;
     YPOS = 0;
+}
+
+void vga_scrollup()
+{
+    unsigned int last_line = WIDTH * (HIGHT - 1);
+    for (unsigned int i = 0; i < last_line; i++) {
+        *(video + i) = *(video + WIDTH + i);
+    }
+    for (unsigned int i = 0; i < WIDTH; i++) {
+        *(video + i + last_line) = theme_color;
+    }
+    YPOS = YPOS == 0 ? 0 : HIGHT - 1;
 }

@@ -8,6 +8,7 @@
 #include <kernel/memory/page.h>
 #include <kernel/memory/phy_mem.h>
 #include <kernel/memory/vir_mem.h>
+#include <kernel/memory/malloc.h>
 #include <libs/mstdio.h>
 #include <kernel/cpu/cpu.h>
 /* Macros. */
@@ -105,6 +106,9 @@ void _kernel_init(unsigned long addr)
     }
     kprintf("[MM] Allocated %d pages for stack start at %p\n", K_STACK_SIZE>>12, K_STACK_START);
 
+    //give malloc init
+    mem_init();
+    kprintf("[MM] Malloc Init Success \n");
     kprintf("[KERNEL] === Initialization Done === \n\n");
 
     vga_put_str("MELOX OS\n");
@@ -139,5 +143,27 @@ void _kernel_main()
 
     uintptr_t k_start = vmm_v2p(&virkernel_start);
     kprintf("The kernel's base address mapping: %x->%x\n", &virkernel_start, k_start);
-    __asm__("int $0");
+    //__asm__("int $0");
+    // test malloc & free
+
+    // uint8_t** arr = (uint8_t**)k_malloc(10 * sizeof(uint8_t*));
+
+    // for (size_t i = 0; i < 10; i++) {
+    //     arr[i] = (uint8_t*)k_malloc((i + 1) * 2);
+    // }
+
+    // for (size_t i = 0; i < 10; i++) {
+    //     lxfree(arr[i]);
+    // }
+
+    uint8_t* big_ = k_malloc(1000);
+    big_[0] = 123;
+    big_[1] = 23;
+    big_[2] = 3;
+
+    kprintf("malloc %d, %d, %d\n", big_[0], big_[1], big_[2]);
+
+    // good free
+    //malloc_free(arr);
+    malloc_free(big_);
 }
