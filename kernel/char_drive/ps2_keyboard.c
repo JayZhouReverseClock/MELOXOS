@@ -35,6 +35,43 @@ void init_8259()
     io_outb(0xa1, 0xff);
 }
 
+
+static void ps2_post_cmd(uint8_t port, char cmd, uint16_t arg) {
+    char result;
+    // 等待PS/2输入缓冲区清空，这样我们才可以写入命令
+    while((result = io_inb(PS2_PORT_CTRL_STATUS)) & PS2_STATUS_IFULL);
+
+    io_outb(port, cmd);
+    if (!(arg & PS2_NO_ARG)) {
+        // 所有参数一律通过0x60传入。
+        io_outb(PS2_PORT_ENC_CMDREG, (uint8_t)(arg & 0x00ff));
+    }
+}
+
+static uint8_t ps2_issue_cmd(char cmd, uint16_t arg) {
+    ps2_post_cmd(PS2_PORT_CTRL_CMDREG, cmd, arg);
+
+    char result;
+    
+    // 等待PS/2控制器返回。通过轮询（polling）状态寄存器的 bit 0
+    // 如置位，则表明返回代码此时就在 0x60 IO口上等待读取。
+    while(!((result = io_inb(PS2_PORT_CTRL_STATUS)) & PS2_STATUS_OFULL));
+
+    return io_inb(PS2_PORT_ENC_CMDREG);
+}
+
+static uint8_t ps2_issue_dev_cmd(char cmd, uint16_t arg) {
+    ps2_post_cmd(PS2_PORT_ENC_CMDREG, cmd, arg);
+
+    char result;
+    
+    // 等待PS/2控制器返回。通过轮询（polling）状态寄存器的 bit 0
+    // 如置位，则表明返回代码此时就在 0x60 IO口上等待读取。
+    while(!((result = io_inb(PS2_PORT_CTRL_STATUS)) & PS2_STATUS_OFULL));
+
+    return io_inb(PS2_PORT_ENC_CMDREG);
+}
+
 void init_ps2k()
 {
     asm volatile("cli");
@@ -79,41 +116,6 @@ done:
     asm volatile("sti");
 }
 
-static uint8_t ps2_issue_cmd(char cmd, uint16_t arg) {
-    ps2_post_cmd(PS2_PORT_CTRL_CMDREG, cmd, arg);
-
-    char result;
-    
-    // 等待PS/2控制器返回。通过轮询（polling）状态寄存器的 bit 0
-    // 如置位，则表明返回代码此时就在 0x60 IO口上等待读取。
-    while(!((result = io_inb(PS2_PORT_CTRL_STATUS)) & PS2_STATUS_OFULL));
-
-    return io_inb(PS2_PORT_ENC_CMDREG);
-}
-
-static uint8_t ps2_issue_dev_cmd(char cmd, uint16_t arg) {
-    ps2_post_cmd(PS2_PORT_ENC_CMDREG, cmd, arg);
-
-    char result;
-    
-    // 等待PS/2控制器返回。通过轮询（polling）状态寄存器的 bit 0
-    // 如置位，则表明返回代码此时就在 0x60 IO口上等待读取。
-    while(!((result = io_inb(PS2_PORT_CTRL_STATUS)) & PS2_STATUS_OFULL));
-
-    return io_inb(PS2_PORT_ENC_CMDREG);
-}
-
-static void ps2_post_cmd(uint8_t port, char cmd, uint16_t arg) {
-    char result;
-    // 等待PS/2输入缓冲区清空，这样我们才可以写入命令
-    while((result = io_inb(PS2_PORT_CTRL_STATUS)) & PS2_STATUS_IFULL);
-
-    io_outb(port, cmd);
-    if (!(arg & PS2_NO_ARG)) {
-        // 所有参数一律通过0x60传入。
-        io_outb(PS2_PORT_ENC_CMDREG, (uint8_t)(arg & 0x00ff));
-    }
-}
 
 
 void init_keyboard()

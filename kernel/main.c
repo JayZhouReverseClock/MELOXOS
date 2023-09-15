@@ -112,7 +112,7 @@ void _kernel_init(unsigned long addr)
     kprintf("[KERNEL] === Initialization Done === \n\n");
 
     vga_put_str("MELOX OS\n");
-    // __asm__("int $1");
+     //__asm__("int $1");
 }
 
 void _kernel_finnal_init() {

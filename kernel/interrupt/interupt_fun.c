@@ -1,6 +1,7 @@
 #include <libs/mstdio.h>
 #include <kernel/interrupt/interupt_fun.h>
 #include <vga/vga.h>
+
 void _divide_err(unsigned long addr, int err_code)
 {
     vga_set_show(1,VGA_COLOR_BLACK,VGA_COLOR_BLUE);

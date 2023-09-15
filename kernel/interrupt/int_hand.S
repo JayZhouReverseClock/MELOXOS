@@ -39,7 +39,7 @@ errcode
 .globl divide_error,debug,nmi,int3,overflow,bounds,invalid_op
 .globl double_fault,coprocessor_segment_overrun
 .globl invalid_TSS,segment_not_present,stack_segment
-.globl general_protection,coprocessor_error,irq13,reserved
+.globl general_protection,coprocessor_error,irq13,reserved,handle_keywords
 
  _no_err_code:
 	xchgl %eax,(%esp)
