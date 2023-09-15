@@ -30,4 +30,13 @@ int cpu_brand_string_supported();
 
 void cpu_get_brand(char* brand_out);
 
+inline void cpu_delay(){
+    
+        asm volatile (
+        "nop\n"  // 执行空指令
+        "nop\n"
+        "nop\n"
+    );
+}
+
 

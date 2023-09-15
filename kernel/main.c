@@ -146,24 +146,13 @@ void _kernel_main()
     //__asm__("int $0");
     // test malloc & free
 
-    // uint8_t** arr = (uint8_t**)k_malloc(10 * sizeof(uint8_t*));
-
-    // for (size_t i = 0; i < 10; i++) {
-    //     arr[i] = (uint8_t*)k_malloc((i + 1) * 2);
-    // }
-
-    // for (size_t i = 0; i < 10; i++) {
-    //     lxfree(arr[i]);
-    // }
-
     uint8_t* big_ = k_malloc(1000);
     big_[0] = 123;
     big_[1] = 23;
     big_[2] = 3;
 
     kprintf("malloc %d, %d, %d\n", big_[0], big_[1], big_[2]);
-
-    // good free
-    //malloc_free(arr);
     malloc_free(big_);
+
+    init_keyboard();
 }
