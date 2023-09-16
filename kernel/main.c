@@ -119,16 +119,22 @@ void _kernel_finnal_init() {
     //kprintf("[KERNEL] === Post Initialization === \n");
     size_t virk_init_pg_count = ((uintptr_t)(&__init_phykernel_end)) >> 12;
     kprintf("[MM] Releaseing %d pages from 0x0.\n", virk_init_pg_count);
-
-    // 清除 hhk_init 与前1MiB的映射
-    for (size_t i = 0; i < 256; i++) {
-
-        vmm_unmap_page((i << 12));
-    }
-    for (size_t i = 256; i < virk_init_pg_count; i++) {
+    
+    // // 清除 hhk_init 与前1MiB的映射
+    for (size_t i = 0; i < virk_init_pg_count; i++) {
 
         vmm_unmap_page((i << 12));
     }
+
+    // // 清除 hhk_init 与前1MiB的映射
+    // for (size_t i = 0; i < 256; i++) {
+
+    //     vmm_unmap_page((i << 12));
+    // }
+    // for (size_t i = 256; i < virk_init_pg_count; i++) {
+
+    //     vmm_unmap_page((i << 12));
+    // }
     kprintf("[KERNEL] === Post Initialization Done === \n\n");
 }
 

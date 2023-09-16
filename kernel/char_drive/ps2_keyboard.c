@@ -5,6 +5,8 @@
 
 void init_8259()
 {
+    asm volatile("cli");
+
     //ICW1
     io_outb(0x20, 0x11);
     cpu_delay();
@@ -33,6 +35,8 @@ void init_8259()
     io_outb(0x21, 0xff);
     cpu_delay();
     io_outb(0xa1, 0xff);
+
+    asm volatile("sti");
 }
 
 
@@ -143,4 +147,5 @@ void handle_keywords()
 
     io_outb(0x20, 0x20);
     io_outb(0x20, 0x20);
+    asm volatile("sti");
 }

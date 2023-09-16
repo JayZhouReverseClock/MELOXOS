@@ -19,6 +19,7 @@
         pushw $0x08
         pushl $_after_gdt
         retf
+        //jmp 0x08: _after_gdt
 
     _after_gdt:
         movl $mb_info, (%esp)
@@ -40,7 +41,7 @@
 
         call _kernel_main
 
-        cli
+        //cli
     j_:
         hlt
         jmp j_

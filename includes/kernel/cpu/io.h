@@ -112,12 +112,7 @@ io_outl(int port, uint32_t data)
 }
 
 static inline void cpu_delay(){
-    
-        asm volatile (
-        "nop\n"  // 执行空指令
-        "nop\n"
-        "nop\n"
-    );
+    for(int i = 0; i < 3; i++);
 }
 
 #endif

@@ -61,11 +61,11 @@ void init_page(ptd_t* pt)
     ptd_t * tmp_paget_phy_addr = pt + 1024;
     //identity map 1M memory
     for(uint32_t i = 0; i < 256; i++)
-        *(tmp_paget_phy_addr + i) = ((i << 12) & 0xFFFFF000UL) | (PG_PREM_RW & 0xfff);
+        *(tmp_paget_phy_addr + i) = (((i << 12) & 0xFFFFF000UL) | (PG_PREM_RW & 0xfff));
 
     //identity map virkernel_init memory
     for(uint32_t i = 0; i < LOADOS_PAGE_COUNT; i++)
-        *(tmp_paget_phy_addr + i + 256) = (((i << 12) + MEM_1M) & 0xFFFFF000UL) | (PG_PREM_RW & 0xfff);
+        *(tmp_paget_phy_addr + i + 256) = ((((i << 12) + MEM_1M) & 0xFFFFF000UL) | (PG_PREM_RW & 0xfff));
 
     //now we map the kernel
     //calculate the virtrue kernrl page index
@@ -77,7 +77,7 @@ void init_page(ptd_t* pt)
     //we give 3 pagetable to virkel, is 3 * 4 = 12 mib size
     for(uint32_t i = 0; i < PG_TABLE_STACK - PG_TABLE_KERNEL; i++)
     {
-        *(tmp_paged_phy_addr + virk_pde_index + i) = PDE(PG_PREM_RW, PT_ADDR(pt, PG_TABLE_KERNEL + i));
+        *(pt + virk_pde_index + i) = PDE(PG_PREM_RW, PT_ADDR(pt, PG_TABLE_KERNEL + i));
     }
 
     //avoid kernel size > prepared page count
