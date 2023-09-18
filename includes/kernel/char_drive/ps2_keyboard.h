@@ -43,8 +43,38 @@
 
 #define PS2_NO_ARG 0xff00
 
+#define KBD_BUF_PORT Ox60 //键盘 buffer 寄存器端口号为 Ox60
+ 
+ // 用转义字符定义部分控制字符
+#define esc  '\033' //八进制表示字符，也可以用十六进制’＼xlb
+#define backspace '\b' 
+#define tab '\t' 
+#define enter '\r' 
+#define delete '\177' //八进制表示字符，十六进制为’＼x7f
+ 
+//以上不可见字符一律定义为 •I 
+#define char_invisible   0 
+#define ctrl_l_char     char_invisible 
+#define ctrl_r_char     char_invisible 
+#define shift_l_char    char_invisible 
+#define shift_r_char    char_invisible 
+#define alt_l_char      char_invisible
+#define alt_r_char      char_invisible 
+#define caps_lock_char  char_invisible 
+ 
+//定义控制字符的通码和断码舍
+#define shift_l_make    0x2a
+#define shift_r_make    0x36
+#define alt_l_make      0x38
+#define alt_r_make      0xe038
+#define alt_r_break     0xe0b8
+#define crtl_l_make     0x1d
+#define crtl_r_make     0xe01d
+#define crtl_r_break    0xe09d
+#define caps_lock_make  0x3a
+
 void init_8259();
 void init_ps2k();
-void handle_keywords();
+static void handle_keywords();
 void init_keyboard();
 
