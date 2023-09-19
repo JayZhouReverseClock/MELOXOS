@@ -11,6 +11,7 @@
 #include <kernel/memory/malloc.h>
 #include <libs/mstdio.h>
 #include <kernel/cpu/cpu.h>
+#include <kernel/time/time.h>
 /* Macros. */
 
 /* Check if the bit BIT in FLAGS is set. */
@@ -160,5 +161,6 @@ void _kernel_main()
     kprintf("malloc %d, %d, %d\n", big_[0], big_[1], big_[2]);
     malloc_free(big_);
 
+    timer_init();
     init_keyboard();
 }
