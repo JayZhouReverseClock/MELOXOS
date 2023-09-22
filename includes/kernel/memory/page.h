@@ -1,7 +1,21 @@
+#ifndef MELOX_PAGE_H
+#define MELOX_PAGE_H
+
 #include <stdint.h>
 typedef unsigned int ptd_t;
 typedef unsigned int pt_t;
 typedef unsigned int pt_attr;
+
+typedef struct {
+    // 物理页码（如果不存在映射，则为0）
+    uint32_t pn;
+    // 物理页地址（如果不存在映射，则为0）
+    uintptr_t pa;
+    // 映射的flags
+    uint16_t flags;
+    // PTE地址
+    uint32_t *pte;
+} v_mapping;
 
 #define K_STACK_SIZE            0x100000U
 #define K_STACK_START           ((0xFFBFFFFFU - K_STACK_SIZE) + 1)
@@ -11,11 +25,19 @@ typedef unsigned int pt_attr;
 // 页表的虚拟基地址，可以用来访问到各个PTE
 #define PT_BASE_VADDR                 0xFFC00000U
 
+#define PG_SIZE_BITS                12
+#define PG_SIZE                     (1 << PG_SIZE_BITS)
+
+#define HAS_FLAGS(entry, flags)             ((PG_ENTRY_FLAGS(entry) & (flags)) == flags)
+
 // 用来获取特定的页表的虚拟地址
 #define PT_VADDR(pd_offset)           (PT_BASE_VADDR | (pd_offset << 12))
 
 #define V_ADDR(pd, pt, offset)  ((pd) << 22 | (pt) << 12 | (offset))
 #define P_ADDR(ppn, offset)     ((ppn << 12) | (offset))
+
+#define PG_ENTRY_FLAGS(entry)   (entry & 0xFFFU)
+#define PG_ENTRY_ADDR(entry)   (entry & ~0xFFFU)
 
 #define MEM_1MB                 0x100000UL
 #define HIGHER_HLF_BASE         0xC0000000UL
@@ -53,3 +75,4 @@ typedef unsigned int pt_attr;
 #define P2V(paddr)          ((uintptr_t)(paddr)  +  HIGHER_HLF_BASE)
 #define V2P(vaddr)          ((uintptr_t)(vaddr)  -  HIGHER_HLF_BASE)
 
+#endif

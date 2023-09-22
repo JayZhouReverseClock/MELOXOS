@@ -11,6 +11,7 @@
 #include <kernel/memory/malloc.h>
 #include <libs/mstdio.h>
 #include <kernel/cpu/cpu.h>
+#include <kernel/time/time.h>
 /* Macros. */
 
 /* Check if the bit BIT in FLAGS is set. */
@@ -84,25 +85,25 @@ void _kernel_init(unsigned long addr)
 
     // 将内核占据的页设为已占用
     size_t pg_count = (uintptr_t)(&virkernel_end  - &virkernel_start) >> 12;
-    pmm_mark_chunk_occupied(V2P(&virkernel_start) >> 12, pg_count);
+    pmm_mark_chunk_occupied(KERNEL_PID, V2P(&virkernel_start) >> 12, pg_count, 0);
     kprintf("[MM] Allocated %d pages for kernel.\n", pg_count);
 
     size_t vga_buf_pgs = VGA_BUFFER_SIZE >> 12;
     
     // 首先，标记VGA部分为已占用
-    pmm_mark_chunk_occupied(VIDEO >> 12, vga_buf_pgs);
+    pmm_mark_chunk_occupied(KERNEL_PID, VIDEO >> 12, vga_buf_pgs, 0);
     
     // 重映射VGA文本缓冲区（以后会变成显存，i.e., framebuffer）
     for (size_t i = 0; i < vga_buf_pgs; i++)
     {
-        vmm_map_page(VGA_BUFFER_VADDR + (i << 12), VIDEO + (i << 12), PG_PREM_RW, PG_PREM_RW);
+        vmm_map_page(KERNEL_PID, VGA_BUFFER_VADDR + (i << 12), VIDEO + (i << 12), PG_PREM_RW, PG_PREM_RW);
     }
     set_vga_buffer(VGA_BUFFER_VADDR);
     kprintf("[MM] Mapped VGA to %x.\n", VGA_BUFFER_VADDR);
 
     // 为内核创建一个专属栈空间。
     for (size_t i = 0; i < (K_STACK_SIZE >> 12); i++) {
-        vmm_alloc_page(K_STACK_START + (i << 12), PG_PREM_RW, PG_PREM_RW);
+        vmm_alloc_page(KERNEL_PID, K_STACK_START + (i << 12), NULL, PG_PREM_RW, PG_PREM_RW);
     }
     kprintf("[MM] Allocated %d pages for stack start at %p\n", K_STACK_SIZE>>12, K_STACK_START);
 
@@ -123,7 +124,7 @@ void _kernel_finnal_init() {
     // // 清除 hhk_init 与前1MiB的映射
     for (size_t i = 0; i < virk_init_pg_count; i++) {
 
-        vmm_unmap_page((i << 12));
+        vmm_unmap_page(KERNEL_PID, (i << 12));
     }
 
     // // 清除 hhk_init 与前1MiB的映射
@@ -160,5 +161,6 @@ void _kernel_main()
     kprintf("malloc %d, %d, %d\n", big_[0], big_[1], big_[2]);
     malloc_free(big_);
 
+    timer_init();
     init_keyboard();
 }

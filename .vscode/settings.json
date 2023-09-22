@@ -5,6 +5,7 @@
         "stdint.h": "c",
         "vga.h": "c",
         "page.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "mstdio.h": "c"
     }
 }

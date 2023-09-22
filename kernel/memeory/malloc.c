@@ -122,7 +122,7 @@ void mem_init()
     //mem_max_addr = (char*)(mem_heap + MAX_HEAP);
     mem_max_addr = (char*)K_STACK_START;
     uint8_t* pgaddr = 0;
-    if((pgaddr = vmm_alloc_page(mem_brk, PG_PREM_RW, PG_PREM_RW)) == NULL)
+    if((pgaddr = vmm_alloc_page(KERNEL_PID, mem_brk, NULL, PG_PREM_RW, PG_PREM_RW)) == NULL)
         return;
     kprintf("malloc init phy address is 0x%x\n", pgaddr);
     malloc_init();
@@ -140,7 +140,7 @@ void* mem_sbrk(int incr)
     if(diff)
     {
         uint8_t* pgaddr = -1;
-        if(!(pgaddr = vmm_alloc_page(new,PG_PREM_RW,PG_PREM_RW)))
+        if(!(pgaddr = vmm_alloc_page(KERNEL_PID, new, NULL, PG_PREM_RW,PG_PREM_RW)))
         {
             return NULL;
         }

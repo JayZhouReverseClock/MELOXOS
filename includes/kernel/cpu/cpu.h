@@ -1,22 +1,21 @@
+#ifndef CPU_H
+#define CPU_H
+
 typedef unsigned long reg32;
 typedef unsigned short reg16;
 
-typedef struct {
-    reg32 edi;
-    reg32 esi;
-    reg32 ebp;
-    reg32 esp;
-    reg32 ebx;
-    reg32 edx;
-    reg32 ecx;
-    reg32 eax;
-} __attribute__((packed)) registers;
 
 reg32 cpu_r_cr0();
 
 reg32 cpu_r_cr2();
 
 reg32 cpu_r_cr3();
+
+
+static inline void cpu_invplg(void* va)
+{
+    asm volatile("invlpg (%0)" ::"r"((unsigned int)va) : "memory");
+};
 
 void cpu_w_cr0(reg32 v);
 
@@ -31,3 +30,4 @@ int cpu_brand_string_supported();
 void cpu_get_brand(char* brand_out);
 
 
+#endif
