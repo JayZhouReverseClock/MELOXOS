@@ -1,8 +1,20 @@
 #ifndef CPU_H
 #define CPU_H
 
-typedef unsigned long reg32;
+typedef unsigned int reg32;
 typedef unsigned short reg16;
+
+typedef struct
+{
+    reg32 eax;
+    reg32 ebx;
+    reg32 ecx;
+    reg32 edx;
+    reg32 edi;
+    reg32 ebp;
+    reg32 esi;
+    reg32 esp;
+} __attribute__((packed)) gp_regs;
 
 
 reg32 cpu_r_cr0();

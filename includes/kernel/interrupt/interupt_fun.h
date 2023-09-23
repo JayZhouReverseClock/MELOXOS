@@ -1,5 +1,6 @@
 #ifndef __MELOX_IDTHAND__
 #define __MELOX_IDTHAND__
+#include <kernel/cpu/cpu.h>
 // Ref: Intel Manuel Vol.3 Figure 6-1
 #define FAULT_DIVISION_ERROR            0x0
 #define FAULT_TRAP_DEBUG_EXCEPTION      0x1
@@ -23,6 +24,18 @@
 #define FAULT_SIMD_FP_EXCEPTION         0x13
 #define FAULT_VIRTUALIZATION_EXCEPTION  0x14
 #define FAULT_CONTROL_PROTECTION        0x15
+
+
+typedef struct {
+    gp_regs registers;
+    unsigned int vector;
+    unsigned int err_code;
+    unsigned int eip;
+    unsigned int cs;
+    unsigned int eflags;
+    unsigned int esp;
+    unsigned int ss;
+} __attribute__((packed)) isr_param;
 
 void _divide_err();
 

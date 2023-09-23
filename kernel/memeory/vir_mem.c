@@ -406,4 +406,38 @@ void* vmm_v2p(void* va)
 {
     return (void*)vmm_lookup(va).pa;
 }
+
+void* vmm_dup_page(pid_t pid, void* pa)
+{
+    void* new_ppg = pmm_alloc_page(pid, 0);
+    vmm_cover_map_page(pid, PG_MOUNT_3, new_ppg, PG_PREM_RW,PG_PREM_RW);
+    vmm_cover_map_page(pid, PG_MOUNT_4, pa, PG_PREM_RW,PG_PREM_RW);
+
+    asm volatile (
+        "movl %1, %%edi\n"
+        "movl %2, %%esi\n"
+        "rep movsl\n"
+        :: "c"(1024), "r"(PG_MOUNT_3), "r"(PG_MOUNT_4)
+        : "memory", "%edi", "%esi");
+
+    vmm_unset_mapping(PG_MOUNT_3);
+    vmm_unset_mapping(PG_MOUNT_4);
+
+    return new_ppg;
+}
+
+void* vmm_mount_pd(uintptr_t mnt, void* pde)
+{
+    ptd_t* l1pt = (ptd_t*)PTD_BASE_VADDR;
+    l1pt[(mnt >> 22)] = PDE(T_SELF_REF_PERM, pde);
+    cpu_invplg(mnt);
+    return mnt;
+}
+
+void* vmm_unmount_pd(uintptr_t mnt)
+{
+    ptd_t* l1pt = (ptd_t*)PTD_BASE_VADDR;
+    l1pt[(mnt >> 22)] = 0;
+    cpu_invplg(mnt);
+}
 #endif

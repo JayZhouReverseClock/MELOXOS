@@ -36,6 +36,7 @@ typedef struct {
 #define V_ADDR(pd, pt, offset)  ((pd) << 22 | (pt) << 12 | (offset))
 #define P_ADDR(ppn, offset)     ((ppn << 12) | (offset))
 
+
 #define PG_ENTRY_FLAGS(entry)   (entry & 0xFFFU)
 #define PG_ENTRY_ADDR(entry)   (entry & ~0xFFFU)
 
@@ -47,21 +48,22 @@ typedef struct {
 #define PG_PRESENT              (0x1)
 #define PG_WRITE                (0x1 << 1)
 #define PG_ALLOW_USER           (0x1 << 2)
-#define PG_WRITE_THROUGHT       (1 << 3)
+#define PG_WRITE_THROUGH      (1 << 3)
 #define PG_DISABLE_CACHE        (1 << 4)
 #define PG_DIRTY(pte)           ((pte & (1 << 6)) >> 6)
 #define PG_ACCESSED(pte)        ((pte & (1 << 5)) >> 5)
 #define PG_PDE_4MB              (1 << 7)
 
+
 #define PG_PREM_R              PG_PRESENT
 #define PG_PREM_RW             PG_PRESENT | PG_WRITE
 #define PG_PREM_UR             PG_PRESENT | PG_ALLOW_USER
 #define PG_PREM_URW            PG_PRESENT | PG_WRITE | PG_ALLOW_USER
-#define T_SELF_REF_PERM        PG_PREM_RW | PG_DISABLE_CACHE
+#define T_SELF_REF_PERM        PG_PREM_RW | PG_DISABLE_CACHE | PG_WRITE_THROUGH
 
 #define IS_CACHED(entry)    ((entry & 0x1))
 #define PG_ALIGN(addr)          ((uintptr_t)(addr)  & 0xFFFFF000UL)
-#define PDE(flags, pt_addr)     (PG_ALIGN(pt_addr) | ((flags) & 0xfff))
+#define PDE(flags, pt_addr)     (PG_ALIGN(pt_addr) | (((flags) | PG_WRITE_THROUGH) & 0xfff))
 #define PTE(flags, pg_addr)     (PG_ALIGN(pg_addr) | ((flags) & 0xfff))
 
 #define PD_INDEX(vaddr)     (((uintptr_t)(vaddr) & 0xFFC00000UL) >> 22)
@@ -74,5 +76,15 @@ typedef struct {
 
 #define P2V(paddr)          ((uintptr_t)(paddr)  +  HIGHER_HLF_BASE)
 #define V2P(vaddr)          ((uintptr_t)(vaddr)  -  HIGHER_HLF_BASE)
+
+#define PD_MOUNT_1          0xAFC00000
+#define PD_MOUNT_2          0xAF800000
+#define PG_MOUNT_BASE       0xAF7FF000
+#define PG_MOUNT_1          (PG_MOUNT_BASE)
+#define PG_MOUNT_2          (PG_MOUNT_BASE - 0x1000)
+#define PG_MOUNT_3          (PG_MOUNT_BASE - 0x2000)
+#define PG_MOUNT_4          (PG_MOUNT_BASE - 0x3000)
+
+#define PTE_MOUNTED(mnt, vpn)     (((pt_t*)((mnt) | (((vpn) & 0xffc00) << 2)))[(vpn) & 0x3ff])
 
 #endif

@@ -147,6 +147,28 @@ v_mapping vmm_lookup(void* va);
  * @return void* 物理地址，如映射不存在，则为NULL
  */
 void* vmm_v2p(void* va);
+
+/**
+ * @brief (COW) 为虚拟页创建副本。
+ * 
+ * @return void* 包含虚拟页副本的物理页地址。
+ * 
+ */
+void* vmm_dup_page(pid_t pid, void* pa);
+
+/**
+ * @brief 挂载另一个虚拟地址空间至当前虚拟地址空间
+ * 
+ * @param pde 页目录的物理地址
+ * @return void* 
+ */
+void* vmm_mount_pd(uintptr_t mnt, void* pde);
+
+/**
+ * @brief 卸载已挂载的虚拟地址空间
+ * 
+ */
+void* vmm_unmount_pd(uintptr_t mnt);
 #endif
 
 
