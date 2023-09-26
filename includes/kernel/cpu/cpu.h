@@ -1,6 +1,6 @@
 #ifndef CPU_H
 #define CPU_H
-
+#include <stdint.h>
 typedef unsigned int reg32;
 typedef unsigned short reg16;
 
@@ -16,6 +16,17 @@ typedef struct
     reg32 esp;
 } __attribute__((packed)) gp_regs;
 
+static inline reg32 cpu_rcr2()
+{
+    uintptr_t val;
+    asm volatile("movl %%cr2,%0" : "=r" (val));
+    return val;
+}
+
+static inline void cpu_lcr3(reg32 v)
+{
+    asm("mov %0, %%cr3" ::"r"(v));
+}
 
 reg32 cpu_r_cr0();
 

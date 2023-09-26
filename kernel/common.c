@@ -14,5 +14,5 @@ void __assert_fail(const char* expr, const char* file, unsigned int line) {
         ::"i"(32), "D"(buffer)
     );
 
-    spin();     // never reach
+    while(1);     // never reach
 }

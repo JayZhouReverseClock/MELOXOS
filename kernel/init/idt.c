@@ -28,7 +28,7 @@ void _init_idt()
     _set_idt_entry(FAULT_SEG_NOT_PRESENT, 0x08, &segment_not_present, 0);
     _set_idt_entry(FAULT_STACK_SEG_FAULT, 0x08, &stack_segment, 0);
     _set_idt_entry(FAULT_GENERAL_PROTECTION, 0x08, &general_protection, 0);
-    //_set_idt_entry(FAULT_PAGE_FAULT, 0x08, page_fault, 0);
+    _set_idt_entry(FAULT_PAGE_FAULT, 0x08, &page_fault, 0);
     _set_idt_entry(FAULT_RESERVED_1, 0x08, &reserved, 0);
     //_set_idt_entry(FAULT_X87_FAULT, 0x08, coprocessor_error, 0);
     for (int i=17;i < 48;i++)

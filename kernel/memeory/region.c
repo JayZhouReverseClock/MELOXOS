@@ -17,3 +17,20 @@ void region_add(struct m_pcb* proc,unsigned long start, unsigned long end, unsig
         llist_append(&proc->process_mm->head, &region->head);
     }
 }
+
+struct mm_region* region_get(struct m_pcb* proc, unsigned long vaddr) {
+    struct mm_region* head = proc->process_mm;
+    
+    if (!head) {
+        return NULL;
+    }
+
+    struct mm_region *pos, *n;
+
+    llist_for_each(pos, n, &head->head, head) {
+        if (vaddr >= pos->start && vaddr < pos->end) {
+            return pos;
+        }
+    }
+    return NULL;
+}

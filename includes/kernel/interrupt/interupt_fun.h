@@ -25,6 +25,7 @@
 #define FAULT_VIRTUALIZATION_EXCEPTION  0x14
 #define FAULT_CONTROL_PROTECTION        0x15
 
+#define HARDWARE_TIME_INT               0X20
 
 typedef struct {
     gp_regs registers;

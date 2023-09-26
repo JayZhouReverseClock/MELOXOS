@@ -1,9 +1,11 @@
 #include <init/gdt.h>
-
+#include <init/tss.h>
 #define GDT_ENTRY 5
 
 uint64_t _gdt[5];
 uint16_t _gdt_limit = sizeof(_gdt) - 1;
+
+extern struct x86_tss _tss;
 
 void _set_gdt_entry(uint32_t index, uint32_t base, uint32_t limit, uint32_t flags) {
     _gdt[index] = SEG_BASE_H(base) | flags | SEG_LIM_H(limit) | SEG_BASE_M(base);
@@ -18,4 +20,5 @@ _init_gdt() {
     _set_gdt_entry(2, 0, 0xfffff, SEG_R0_DATA);
     _set_gdt_entry(3, 0, 0xfffff, SEG_R3_CODE);
     _set_gdt_entry(4, 0, 0xfffff, SEG_R3_DATA);
+    _set_gdt_entry(5, &_tss, sizeof(struct x86_tss) - 1, SEG_TSS);
 }

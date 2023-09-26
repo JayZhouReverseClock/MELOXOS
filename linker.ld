@@ -47,5 +47,7 @@ SECTIONS {
     }
 
     virkernel_end = ALIGN(4K);
+    __proc_table = ALIGN(4K);
+    . += 4M;
     __heap_start = ALIGN(4K);    /* the begin of heap */
 }

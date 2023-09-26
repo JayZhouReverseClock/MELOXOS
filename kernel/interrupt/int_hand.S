@@ -40,6 +40,7 @@ errcode
 .globl double_fault,coprocessor_segment_overrun
 .globl invalid_TSS,segment_not_present,stack_segment
 .globl general_protection,coprocessor_error,irq13,reserved,handle_keywords
+.globl intr_time_handler
 
  _no_err_code:
  	xchgl %eax,(%esp)
@@ -157,6 +158,23 @@ _err_code:
 	iret
 	*/
 
+intr_time_handler:
+	pushl %esp
+
+	pushl %esi
+	pushl %ebp
+	pushl %edi
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
+	pushl %eax
+
+	movl %esp, %eax
+	andl $0xfffffff0, %esp
+	subl $16, %esp
+	movl %eax, (%esp)
+
+	call do_intr_time_handler
 
 divide_error:
 	pushl $_divide_err

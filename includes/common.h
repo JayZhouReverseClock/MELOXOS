@@ -14,10 +14,26 @@
         __assert_fail(#cond, __FILE__, __LINE__);     \
     }
 
-
-inline static void spin() {
+inline void panick(const char* msg) {
+    asm(
+        "int %0"
+        ::"i"(32), "D"(msg)
+    );
     while(1);
 }
+
+#define KCODE_SEG              0x08
+#define KDATA_SEG              0x10
+#define UCODE_SEG              0x1B
+#define UDATA_SEG              0x23
+#define TSS_SEG                0x28
+
+
+// 获取v最近的最大k倍数
+#define ROUNDUP(v, k)       (((v) + (k) - 1) & ~((k) - 1))
+
+// 获取v最近的最小k倍数
+#define ROUNDDOWN(v, k)     ((v) & ~((k) - 1))
 
 #include <stddef.h>
 // From Linux kernel v2.6.0 <kernel.h:194>

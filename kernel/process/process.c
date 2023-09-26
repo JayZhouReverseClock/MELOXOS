@@ -2,12 +2,12 @@
 #include <kernel/memory/vir_mem.h>
 #include <libs/mstring.h>
 #include <kernel/memory/region.h>
-volatile struct m_pcb* __current;//TODO MOVE TO .H AND TODO SCHEDULE
+extern volatile struct m_pcb* __current;//TODO MOVE TO .H AND TODO SCHEDULE
 void init_proc(struct m_pcb* pcb)
 {
     memset(pcb, 0, sizeof(*pcb));
 
-    //pcb->pid = alloc_pid();
+    pcb->pid = alloc_pid();
     pcb->state = PROC_CREATED;
 }
 
@@ -137,7 +137,7 @@ not_copy:
     // 正如同fork，返回两次。
     curr_pcb.intr_contxt.registers.eax = 0;
 
-    //push_process(&curr_pcb);
+    push_process(&curr_pcb);
 
     return curr_pcb.pid;
 }

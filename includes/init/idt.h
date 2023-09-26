@@ -19,7 +19,7 @@ void invalid_TSS(void);
 void segment_not_present(void);
 void stack_segment(void);
 void general_protection(void);
-//void page_fault(void);
+void page_fault(void);
 //void coprocessor_error(void);
 void reserved(void);
 void parallel_interrupt(void);
