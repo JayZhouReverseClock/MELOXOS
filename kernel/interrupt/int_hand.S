@@ -176,6 +176,22 @@ intr_time_handler:
 
 	call do_intr_time_handler
 
+.global soft_iret
+	soft_iret:
+		popl %esp
+
+		popl %eax
+		popl %ebx
+		popl %ecx
+		popl %edx
+		popl %edi
+		popl %ebp
+		popl %esi
+		popl %esp
+
+		addl $8, %esp
+		iret
+
 divide_error:
 	pushl $_divide_err
     jmp _no_err_code
