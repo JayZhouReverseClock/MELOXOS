@@ -28,6 +28,23 @@ static inline void cpu_lcr3(reg32 v)
     asm("mov %0, %%cr3" ::"r"(v));
 }
 
+static inline reg32 cpu_rcr3()
+{
+    uintptr_t val;
+    asm volatile("movl %%cr3,%0" : "=r" (val));
+    return val;
+}
+
+static inline reg32 cpu_reflags()
+{
+    uintptr_t val;
+    asm volatile(
+        "pushf\n"
+        "popl %0\n"
+        :"=r"(val)::);
+    return val;
+}
+
 reg32 cpu_r_cr0();
 
 reg32 cpu_r_cr2();

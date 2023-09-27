@@ -115,4 +115,8 @@ static inline void cpu_delay(){
     for(int i = 0; i < 3; i++);
 }
 
+static inline void pic_end_eoi(){
+    io_outb(0x20, 0x20);
+    io_outb(0xa0, 0x20);//EOI end the int
+}
 #endif

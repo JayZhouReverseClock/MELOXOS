@@ -27,6 +27,19 @@ static inline void llist_append(struct llist_header* head, struct llist_header* 
     __llist_add(elem, head, head->next);
 }
 
+static inline int llist_empty(struct llist_header* elem) {
+    return elem->next == elem;
+}
+
+static inline void
+llist_delete(struct llist_header* elem) {
+    elem->prev->next = elem->next;
+    elem->next->prev = elem->next;
+    
+    // make elem orphaned
+    elem->prev = elem;
+    elem->next = elem;
+}
 /**
  * list_entry - get the struct for this entry
  * @ptr:	the &struct list_head pointer.

@@ -18,6 +18,17 @@ void region_add(struct m_pcb* proc,unsigned long start, unsigned long end, unsig
     }
 }
 
+void region_release_all(struct m_pcb* proc) {
+    struct mm_region* head = proc->process_mm;
+    struct mm_region *pos, *n;
+
+    llist_for_each(pos, n, &head->head, head) {
+        malloc_free(pos);
+    }
+
+    proc->process_mm = NULL;
+}
+
 struct mm_region* region_get(struct m_pcb* proc, unsigned long vaddr) {
     struct mm_region* head = proc->process_mm;
     

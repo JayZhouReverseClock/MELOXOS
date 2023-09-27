@@ -8,11 +8,14 @@
 #include <kernel/memory/mm.h>
 #define KERNEL_PID -1
 
-#define PROC_CREATED 0
+#define PROC_STOPPED 0
 #define PROC_RUNNING 1
-#define PROC_STOPPED 2
-#define PROC_TERMNAT 3
+#define PROC_TERMNAT 2
 #define PROC_DESTROY 4
+#define PROC_BLOCKED 8
+#define PROC_CREATED 16
+
+#define PROC_TERMMASK 0x6
 
 #define PD_REFERENCED       PT_BASE_VADDR
 
@@ -38,6 +41,7 @@ void init_proc(struct m_pcb* pcb);
 void* copy_page(pid_t pid, uintptr_t mount_point);
 void* copy_all_page(struct m_pcb* proc, uintptr_t usedMnt);
 void terminate_proc(int exit_code);
+pid_t destroy_process(pid_t pid);
 
 pid_t alloc_pid();
 /**

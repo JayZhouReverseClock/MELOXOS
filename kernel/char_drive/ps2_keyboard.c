@@ -310,6 +310,7 @@ done:
 
 void init_keyboard()
 {
+    asm("cli");
     init_8259();
 
     uint8_t result = io_inb(0x21);
@@ -320,6 +321,7 @@ void init_keyboard()
     init_ps2k();
     
     _set_idt_entry(0x21, 0x08, &handle_keywords, 0);
+    asm("sti");
 }
 
 static void handle_keywords()

@@ -9,7 +9,8 @@
 #include <kernel/memory/phy_mem.h>
 #include <kernel/memory/vir_mem.h>
 #include <kernel/memory/malloc.h>
-#include <libs/mstdio.h>
+#include <kernel/process/peocess.h>
+#include <kernel/process/sched.h>
 #include <kernel/cpu/cpu.h>
 #include <kernel/time/time.h>
 /* Macros. */
@@ -32,9 +33,11 @@
 extern void virkernel_start;
 extern void virkernel_end ;
 extern void __init_phykernel_end;
-
+ptd_t* __kernel_ptd;
+struct m_pcb tmp;
 /* Forward declarations. */
 void _kernel_init (unsigned long addr);
+extern void __proc0(); /* proc0.c */
 
 void _kernel_init(unsigned long addr)
 {
@@ -50,6 +53,12 @@ void _kernel_init(unsigned long addr)
     /* Clear the screen. */
     vga_clear();
 
+    __kernel_ptd = cpu_rcr3();
+
+    tmp = (struct m_pcb){ .page_table = __kernel_ptd };
+
+    __current = &tmp;
+    
     /* Am I booted by a Multiboot-compliant boot loader? */
     // if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
     // {
@@ -139,6 +148,7 @@ void _kernel_finnal_init() {
     kprintf("[KERNEL] === Post Initialization Done === \n\n");
 }
 
+void creat_proc0();
 void _kernel_main()
 {
     char* buf[64];
@@ -153,14 +163,71 @@ void _kernel_main()
     //__asm__("int $0");
     // test malloc & free
 
-    uint8_t* big_ = k_malloc(1000);
-    big_[0] = 123;
-    big_[1] = 23;
-    big_[2] = 3;
+    // uint8_t* big_ = k_malloc(1000);
+    // big_[0] = 123;
+    // big_[1] = 23;
+    // big_[2] = 3;
 
-    kprintf("malloc %d, %d, %d\n", big_[0], big_[1], big_[2]);
-    malloc_free(big_);
+    //kprintf("malloc %d, %d, %d\n", big_[0], big_[1], big_[2]);
+    //malloc_free(big_);
 
-    timer_init();
-    init_keyboard();
+    // timer_init();
+    // init_keyboard();
+
+    //now we move ourself into proc0, and fork proc1
+    sched_init();
+
+    creat_proc0();
+}
+
+
+void creat_proc0()
+{
+    struct m_pcb proc0;
+
+    /**
+     *      1. 在创建proc0进程前关闭中断
+     *
+     */
+
+    init_proc(&proc0);
+    proc0.intr_contxt = (isr_param){ .registers.esp = KSTACK_TOP - 20,
+                                  .cs = KCODE_SEG,
+                                  .eip = (void*)__proc0,
+                                  .ss = KDATA_SEG,
+                                  .eflags = cpu_reflags() };
+
+    // 必须在读取eflags之后禁用。否则当进程被调度时，中断依然是关闭的！
+    asm volatile("cli");
+    copy_all_page(&proc0, PD_REFERENCED);
+
+    // Ok... 首先fork进我们的零号进程，而后由那里，我们fork进init进程。
+    /*
+        这里是一些栈的设置，因为我们将切换到一个新的地址空间里，并且使用一个全新的栈。
+        让iret满意！
+    */
+    asm volatile("movl %%cr3, %%eax\n"
+                 "movl %%esp, %%ebx\n"
+                 "movl %0, %%cr3\n"
+                 "movl %1, %%esp\n"
+                 "pushf\n"
+                 "pushl %2\n"
+                 "pushl %3\n"
+                 "pushl $0\n"
+                 "pushl $0\n"
+                 "movl %%eax, %%cr3\n"
+                 "movl %%ebx, %%esp\n" ::"r"(proc0.page_table),
+                 "i"(KSTACK_TOP),
+                 "i"(KCODE_SEG),
+                 "r"(proc0.intr_contxt.eip)
+                 : "%eax", "%ebx", "memory");
+
+    // 向调度器注册进程。
+    push_process(&proc0);
+
+    // 由于时钟中断未就绪，我们需要手动通知调度器进行第一次调度。这里也会同时隐式地恢复我们的eflags.IF位
+    schedule();
+
+    /* Should not return */
+    kprintf("Unexpected Return");
 }

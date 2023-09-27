@@ -4,43 +4,57 @@
  *  (C) 2023  LHL(MELODY)
  */
 
-/*
-this is a interrupt hand file
-stack is
-no_err_stack:
-cs
-ip
-interruput hand function
-edx
-ebp
-ss
-ds
-es
-fs
-errcode
-->ip
-
-err_code_stack:
-cs
-ip
-err_code
-function
-edx
-ebp
-ss
-ds
-es
-fs
-errcode
-->ip
-
- */
-
+#define __ASM__
+#include<kernel/interrupt/int_vector.h>
 .globl divide_error,debug,nmi,int3,overflow,bounds,invalid_op
 .globl double_fault,coprocessor_segment_overrun
 .globl invalid_TSS,segment_not_present,stack_segment
 .globl general_protection,coprocessor_error,irq13,reserved,handle_keywords
-.globl intr_time_handler
+.globl intr_time_handler,intr_syscall_handler
+.global soft_iret
+
+.section .text
+intr_time_handler:
+	pushl $0x0
+	pushl $HARDWARE_TIME_INT
+	jmp interrupt_wrapper
+intr_syscall_handler:
+	pushl $0x0
+	pushl $MELOX_SYS_CALL
+	jmp interrupt_wrapper
+
+interrupt_wrapper:
+	pushl %esp
+
+	pushl %esi
+	pushl %ebp
+	pushl %edi
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
+	pushl %eax
+
+	movl %esp, %eax
+	andl $0xfffffff0, %esp
+	subl $16, %esp
+	movl %eax, (%esp)
+
+	call intr_handler
+
+soft_iret:
+	popl %esp
+
+	popl %eax
+	popl %ebx
+	popl %ecx
+	popl %edx
+	popl %edi
+	popl %ebp
+	popl %esi
+	popl %esp
+
+	addl $8, %esp
+	iret
 
  _no_err_code:
  	xchgl %eax,(%esp)
@@ -74,31 +88,6 @@ errcode
 	popl %eax
 	iret
 
-/*	xchgl %eax,(%esp)
-	pushl %ebx
-	pushl %edx
-	pushl %ebp
-	push %ds
-	push %es
-	push %fs
-	pushl $0		# "error code"
-	lea 32(%esp),%edx
-	pushl %edx
-	movl $0x10,%edx
-	mov %dx,%ds
-	mov %dx,%es
-	mov %dx,%fs
-	call *%eax
-	addl $8,%esp
-	pop %fs
-	pop %es
-	pop %ds
-	popl %ebp
-	popl %edx
-	popl %ebx
-	popl %eax
-	iret
-*/
 
 _err_code:
 	xchgl %eax,4(%esp)		# error code <-> %eax
@@ -131,66 +120,7 @@ _err_code:
 	popl %ebx
 	popl %eax
 	iret
-	/*
-	xchgl %eax,4(%esp)		# error code <-> %eax
-	xchgl %ebx,(%esp)		# &function <-> %ebx
-	pushl %edx
-	pushl %ebp
-	push %ds
-	push %es
-	push %fs
-	pushl %eax			# error code
-	lea 32(%esp),%eax		# offset
-	pushl %eax
-	movl $0x10,%eax
-	mov %ax,%ds
-	mov %ax,%es
-	mov %ax,%fs
-	call *%ebx
-	addl $8,%esp
-	pop %fs
-	pop %es
-	pop %ds
-	popl %ebp
-	popl %edx
-	popl %ebx
-	popl %eax
-	iret
-	*/
 
-intr_time_handler:
-	pushl %esp
-
-	pushl %esi
-	pushl %ebp
-	pushl %edi
-	pushl %edx
-	pushl %ecx
-	pushl %ebx
-	pushl %eax
-
-	movl %esp, %eax
-	andl $0xfffffff0, %esp
-	subl $16, %esp
-	movl %eax, (%esp)
-
-	call do_intr_time_handler
-
-.global soft_iret
-	soft_iret:
-		popl %esp
-
-		popl %eax
-		popl %ebx
-		popl %ecx
-		popl %edx
-		popl %edi
-		popl %ebp
-		popl %esi
-		popl %esp
-
-		addl $8, %esp
-		iret
 
 divide_error:
 	pushl $_divide_err

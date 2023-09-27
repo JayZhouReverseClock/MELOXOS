@@ -1,6 +1,64 @@
 #include <libs/mstdio.h>
 #include <kernel/interrupt/interupt_fun.h>
 #include <vga/vga.h>
+#include <kernel/process/peocess.h>
+#include <kernel/cpu/io.h>
+
+static int_subscriber subscribers[256];
+
+void intr_subscribe(const uint8_t vector, int_subscriber subscriber) {
+    subscribers[vector] = subscriber;
+}
+
+void intr_unsubscribe(const uint8_t vector, int_subscriber subscriber) {
+    if (subscribers[vector] == subscriber) {
+        subscribers[vector] = (int_subscriber) 0;
+    }
+}
+
+void intr_handler(isr_param* param)
+{
+	__current->intr_contxt = *param;
+    
+#ifdef USE_KERNEL_PT
+    cpu_lcr3(__kernel_ptd);
+
+    vmm_mount_pd(PD_MOUNT_1, __current->page_table);
+#endif
+
+    isr_param *lparam = &__current->intr_contxt;
+    
+    if (lparam->vector <= 255) {
+        int_subscriber subscriber = subscribers[lparam->vector];
+        if (subscriber) {
+            subscriber(param);
+            goto done;
+        }
+    }
+
+    // if (fallback) {
+    //     fallback(lparam);
+    //     goto done;
+    // }
+    
+    kprintf("INT %x: (%x) [%x: %x] Unknown",
+            lparam->vector,
+            lparam->err_code,
+            lparam->cs,
+            lparam->eip);
+
+done:
+    // for all external interrupts except the spurious interrupt
+    //  this is required by Intel Manual Vol.3A, section 10.8.1 & 10.8.5
+    if (lparam->vector >= EXTERN_INTER) {
+        pic_end_eoi();
+	}
+
+#ifdef USE_KERNEL_PT
+    cpu_lcr3(__current->page_table);
+#endif
+    return;
+}
 
 void _divide_err(unsigned long addr, int err_code)
 {

@@ -34,4 +34,5 @@ void _init_idt()
     for (int i=17;i < 48;i++)
 		  _set_idt_entry(i, 0x08, &reserved, 0);
     //_set_idt_entry(45, 0x08, irq13, 0);
+    _set_idt_entry(MELOX_SYS_CALL, 0x08, &intr_syscall_handler, 3);
 }

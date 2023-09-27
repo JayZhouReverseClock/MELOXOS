@@ -3,6 +3,11 @@
 #include <kernel/cpu/cpu.h>
 #include <status.h>
 #include <common.h>
+#include <kernel/cpu/io.h>
+#include <libs/mstdio.h>
+#include <syscall/syscall.h>
+#include <kernel/memory/malloc.h>
+
 #define MAX_PROCESS 512
 
 volatile struct m_pcb* __current;
@@ -30,8 +35,6 @@ void run(struct m_pcb* proc)
     }
     proc->state = PROC_RUNNING;
 
-    // FIXME: 这里还是得再考虑一下。
-    // tss_update_esp(__current->intr_ctx.esp);
 
     if (__current->page_table != proc->page_table) {
         __current = proc;
@@ -41,7 +44,8 @@ void run(struct m_pcb* proc)
         __current = proc;
     }
 
-    //apic_done_servicing();
+    io_outb(0x20, 0x20);
+    io_outb(0xa0, 0x20);//EOI end the int
 
     asm volatile("pushl %0\n"
                  "jmp soft_iret\n" ::"r"(&__current->intr_contxt)
@@ -77,7 +81,7 @@ pid_t alloc_pid()
         ;
 
     if (i == MAX_PROCESS) {
-        panick("Panic in Ponyville shimmer!");
+        kprintf("Panic in Ponyville shimmer!");
     }
     return i;
 }
@@ -117,4 +121,81 @@ void terminate_proc(int exit_code)
     __current->exit_code = exit_code;
 
     schedule();
+}
+
+__DEFINE_MXSYSCALL1(unsigned int, sleep, unsigned int, seconds)
+{
+    if (!seconds) {
+        return 0;
+    }
+    if (__current->pro_ticks) {
+        return __current->pro_ticks;
+    }
+
+    __current->intr_contxt.registers.eax = seconds;
+    __current->state = PROC_BLOCKED;
+    schedule();
+}
+
+__DEFINE_MXSYSCALL1(void, exit, int, status)
+{
+    terminate_proc(status);
+}
+
+__DEFINE_MXSYSCALL(void, yield)
+{
+    schedule();
+}
+
+__DEFINE_MXSYSCALL1(pid_t, wait, int*, status)
+{
+    pid_t cur = __current->pid;
+    struct m_pcb *proc, *n;
+    if (llist_empty(&__current->children)) {
+        return -1;
+    }
+repeat:
+    llist_for_each(proc, n, &__current->children, siblings)
+    {
+        if (proc->state == PROC_TERMNAT) {
+            goto done;
+        }
+    }
+    // FIXME: 除了循环，也许有更高效的办法……
+    // (在这里进行schedule，需要重写context switch!)
+    goto repeat;
+
+done:
+    *status = proc->exit_code;
+    return destroy_process(proc->pid);
+}
+
+extern void __del_pagetable(pid_t pid, uintptr_t mount_point);
+
+pid_t destroy_process(pid_t pid)
+{
+    int index = pid;
+    if (index <= 0 || index > sched_ctx.ptable_len) {
+        __current->k_status = MXINVLDPID;
+        return;
+    }
+    struct m_pcb* proc = &sched_ctx._procs[index];
+    proc->state = PROC_DESTROY;
+    llist_delete(&proc->siblings);
+
+    if (proc->process_mm) {
+        struct mm_region *pos, *n;
+        llist_for_each(pos, n, &proc->process_mm->head, head)
+        {
+            malloc_free(pos);
+        }
+    }
+
+    vmm_mount_pd(PD_MOUNT_2, proc->page_table);
+
+    __del_pagetable(pid, PD_MOUNT_2);
+
+    vmm_unmount_pd(PD_MOUNT_2);
+
+    return pid;
 }

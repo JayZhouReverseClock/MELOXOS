@@ -43,6 +43,7 @@
     .type start, @function
 
     start:
+        cli
         movl $stack_top, %esp
         pushl $mb_info
         pushl %ebx
@@ -64,7 +65,7 @@
 
     //2. start page,(CR0.PG=1)
         movl %cr0, %eax
-        orl $0x80000000, %eax
+        orl $0x80010000, %eax
         movl %eax, %cr0
 
     //now we are in virture mem, go to virkeenel

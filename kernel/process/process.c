@@ -2,13 +2,32 @@
 #include <kernel/memory/vir_mem.h>
 #include <libs/mstring.h>
 #include <kernel/memory/region.h>
+#include <syscall/syscall.h>
+
 extern volatile struct m_pcb* __current;//TODO MOVE TO .H AND TODO SCHEDULE
+
+__DEFINE_MXSYSCALL(pid_t, fork)
+{
+    return m_fork();
+}
+
+__DEFINE_MXSYSCALL(pid_t, getpid)
+{
+    return __current->pid;
+}
+
+__DEFINE_MXSYSCALL(pid_t, getppid)
+{
+    return __current->parent->pid;
+}
+
 void init_proc(struct m_pcb* pcb)
 {
     memset(pcb, 0, sizeof(*pcb));
 
     pcb->pid = alloc_pid();
     pcb->state = PROC_CREATED;
+    pcb->pro_ticks = 10;
 }
 
 void* copy_page(pid_t pid, uintptr_t mount_point)
@@ -47,7 +66,7 @@ void* copy_page(pid_t pid, uintptr_t mount_point)
 
 void* copy_all_page(struct m_pcb* proc, uintptr_t usedMnt)
 {
-        // copy the entire kernel page table
+    // copy the entire kernel page table
     pid_t pid = proc->pid;
     void* pt_copy = copy_page(pid, usedMnt);
 
@@ -72,11 +91,7 @@ void* copy_all_page(struct m_pcb* proc, uintptr_t usedMnt)
     // 都会导致eip落在区域外面，从而segmentation fault.
 
     // 定义用户栈区域，但是不分配实际的物理页。我们会在Page fault
-    // handler里面实现动态分配物理页的逻辑。（虚拟内存的好处！）
-    // FIXME: 这里应该放到spawn_proc里面。
-    // region_add(proc, USTACK_END, USTACK_SIZE, REGION_PRIVATE | REGION_RW);
-
-    // 至于其他的区域我们暂时没有办法知道，因为那需要知道用户程序的信息。我们留到之后在处理。
+    // handler里面实现动态分配物理页的逻辑。
 
     proc->page_table = pt_copy;
 }
@@ -140,4 +155,30 @@ not_copy:
     push_process(&curr_pcb);
 
     return curr_pcb.pid;
+}
+
+void __del_pagetable(pid_t pid, uintptr_t mount_point)
+{
+    ptd_t* pptd = (ptd_t*)(mount_point | (0x3FF << 12));
+
+    for (size_t i = 0; i < PG_MAX_ENTRIES - 1; i++) {
+        ptd_t ptde = pptd[i];
+        if (!ptde || !(ptde & PG_PRESENT)) {
+            continue;
+        }
+
+        pt_t* ppt = (pt_t*)(mount_point | (i << 12));
+
+        for (size_t j = 0; j < PG_MAX_ENTRIES; j++) {
+            pt_t pte = ppt[j];
+            // free the 4KB data page
+            if ((pte & PG_PRESENT)) {
+                pmm_free_page(pid, PG_ENTRY_ADDR(pte));
+            }
+        }
+        // free the L2 page table
+        pmm_free_page(pid, PG_ENTRY_ADDR(ptde));
+    }
+    // free the L1 directory
+    pmm_free_page(pid, PG_ENTRY_ADDR(pptd[PG_MAX_ENTRIES - 1]));
 }

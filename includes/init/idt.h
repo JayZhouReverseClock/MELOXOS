@@ -1,8 +1,10 @@
 #ifndef __MELOX_IDT__
 #define __MELOX_IDT__
 #include <stdint.h>
-
+#include <kernel/interrupt/interupt_fun.h>
 #define IDT_ATTR(dpl)                   ((0x70 << 5) | (dpl & 3) << 13 | 1 << 15)
+
+extern void intr_syscall_handler(isr_param* param);
 
 void divide_error(void);
 void page_exception(void);
