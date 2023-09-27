@@ -17,353 +17,355 @@ Disassembly of section .virk_init_text:
   10000d:	bc 00 60 10 00       	mov    $0x106000,%esp
   100012:	68 00 10 10 00       	push   $0x101000
   100017:	53                   	push   %ebx
-  100018:	e8 62 00 00 00       	call   10007f <save_multiboot_info>
-  10001d:	68 00 60 00 00       	push   $0x6000
-  100022:	68 00 e0 28 00       	push   $0x28e000
-  100027:	e8 a4 02 00 00       	call   1002d0 <kerner_init>
-  10002c:	8b 04 24             	mov    (%esp),%eax
-  10002f:	25 00 f0 ff ff       	and    $0xfffff000,%eax
-  100034:	0f 22 d8             	mov    %eax,%cr3
-  100037:	0f 20 c0             	mov    %cr0,%eax
-  10003a:	0d 00 00 01 80       	or     $0x80010000,%eax
-  10003f:	0f 22 c0             	mov    %eax,%cr0
-  100042:	58                   	pop    %eax
-  100043:	58                   	pop    %eax
-  100044:	68 69 8c 10 c0       	push   $0xc0108c69
-  100049:	c3                   	ret    
+  100018:	e8 64 00 00 00       	call   100081 <save_multiboot_info>
+  10001d:	58                   	pop    %eax
+  10001e:	58                   	pop    %eax
+  10001f:	68 00 60 00 00       	push   $0x6000
+  100024:	68 00 e0 28 00       	push   $0x28e000
+  100029:	e8 a4 02 00 00       	call   1002d2 <kerner_init>
+  10002e:	8b 04 24             	mov    (%esp),%eax
+  100031:	25 00 f0 ff ff       	and    $0xfffff000,%eax
+  100036:	0f 22 d8             	mov    %eax,%cr3
+  100039:	0f 20 c0             	mov    %cr0,%eax
+  10003c:	0d 00 00 01 80       	or     $0x80010000,%eax
+  100041:	0f 22 c0             	mov    %eax,%cr0
+  100044:	58                   	pop    %eax
+  100045:	58                   	pop    %eax
+  100046:	68 69 8c 10 c0       	push   $0xc0108c69
+  10004b:	c3                   	ret    
 
-0010004a <_save_>:
+0010004c <_save_>:
 extern uint8_t virkernel_start;
 extern uint8_t virkernel_end ;
 extern uint8_t __init_phykernel_end;
 extern uint8_t _kernel_stack;
 
 uint32_t _save_(uint8_t* destination, uint8_t* base, multiboot_uint32_t size) {
-  10004a:	55                   	push   %ebp
-  10004b:	89 e5                	mov    %esp,%ebp
-  10004d:	83 ec 10             	sub    $0x10,%esp
+  10004c:	55                   	push   %ebp
+  10004d:	89 e5                	mov    %esp,%ebp
+  10004f:	83 ec 10             	sub    $0x10,%esp
     multiboot_uint32_t i = 0;
-  100050:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
+  100052:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
     for (; i < size; i++)
-  100057:	eb 19                	jmp    100072 <_save_+0x28>
+  100059:	eb 19                	jmp    100074 <_save_+0x28>
     {
         *(destination + i) = *(base + i);
-  100059:	8b 55 0c             	mov    0xc(%ebp),%edx
-  10005c:	8b 45 fc             	mov    -0x4(%ebp),%eax
-  10005f:	01 d0                	add    %edx,%eax
-  100061:	8b 4d 08             	mov    0x8(%ebp),%ecx
-  100064:	8b 55 fc             	mov    -0x4(%ebp),%edx
-  100067:	01 ca                	add    %ecx,%edx
-  100069:	0f b6 00             	movzbl (%eax),%eax
-  10006c:	88 02                	mov    %al,(%edx)
+  10005b:	8b 55 0c             	mov    0xc(%ebp),%edx
+  10005e:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  100061:	01 d0                	add    %edx,%eax
+  100063:	8b 4d 08             	mov    0x8(%ebp),%ecx
+  100066:	8b 55 fc             	mov    -0x4(%ebp),%edx
+  100069:	01 ca                	add    %ecx,%edx
+  10006b:	0f b6 00             	movzbl (%eax),%eax
+  10006e:	88 02                	mov    %al,(%edx)
     for (; i < size; i++)
-  10006e:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
-  100072:	8b 45 fc             	mov    -0x4(%ebp),%eax
-  100075:	3b 45 10             	cmp    0x10(%ebp),%eax
-  100078:	72 df                	jb     100059 <_save_+0xf>
+  100070:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
+  100074:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  100077:	3b 45 10             	cmp    0x10(%ebp),%eax
+  10007a:	72 df                	jb     10005b <_save_+0xf>
     }
     return i;
-  10007a:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  10007c:	8b 45 fc             	mov    -0x4(%ebp),%eax
 }
-  10007d:	c9                   	leave  
-  10007e:	c3                   	ret    
+  10007f:	c9                   	leave  
+  100080:	c3                   	ret    
 
-0010007f <save_multiboot_info>:
+00100081 <save_multiboot_info>:
 
 void save_multiboot_info(multiboot_info_t* mb_info, multiboot_uint8_t* dest)
 {
-  10007f:	55                   	push   %ebp
-  100080:	89 e5                	mov    %esp,%ebp
-  100082:	53                   	push   %ebx
-  100083:	83 ec 10             	sub    $0x10,%esp
+  100081:	55                   	push   %ebp
+  100082:	89 e5                	mov    %esp,%ebp
+  100084:	53                   	push   %ebx
+  100085:	83 ec 10             	sub    $0x10,%esp
     uint32_t current = 0;
-  100086:	c7 45 f8 00 00 00 00 	movl   $0x0,-0x8(%ebp)
+  100088:	c7 45 f8 00 00 00 00 	movl   $0x0,-0x8(%ebp)
     uint8_t* info_b = (uint8_t*) mb_info;
-  10008d:	8b 45 08             	mov    0x8(%ebp),%eax
-  100090:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  10008f:	8b 45 08             	mov    0x8(%ebp),%eax
+  100092:	89 45 f4             	mov    %eax,-0xc(%ebp)
     for (; current < sizeof(multiboot_info_t); current++)
-  100093:	eb 19                	jmp    1000ae <save_multiboot_info+0x2f>
+  100095:	eb 19                	jmp    1000b0 <save_multiboot_info+0x2f>
     {
         *(dest + current) = *(info_b + current);
-  100095:	8b 55 f4             	mov    -0xc(%ebp),%edx
-  100098:	8b 45 f8             	mov    -0x8(%ebp),%eax
-  10009b:	01 d0                	add    %edx,%eax
-  10009d:	8b 4d 0c             	mov    0xc(%ebp),%ecx
-  1000a0:	8b 55 f8             	mov    -0x8(%ebp),%edx
-  1000a3:	01 ca                	add    %ecx,%edx
-  1000a5:	0f b6 00             	movzbl (%eax),%eax
-  1000a8:	88 02                	mov    %al,(%edx)
+  100097:	8b 55 f4             	mov    -0xc(%ebp),%edx
+  10009a:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  10009d:	01 d0                	add    %edx,%eax
+  10009f:	8b 4d 0c             	mov    0xc(%ebp),%ecx
+  1000a2:	8b 55 f8             	mov    -0x8(%ebp),%edx
+  1000a5:	01 ca                	add    %ecx,%edx
+  1000a7:	0f b6 00             	movzbl (%eax),%eax
+  1000aa:	88 02                	mov    %al,(%edx)
     for (; current < sizeof(multiboot_info_t); current++)
-  1000aa:	83 45 f8 01          	addl   $0x1,-0x8(%ebp)
-  1000ae:	83 7d f8 77          	cmpl   $0x77,-0x8(%ebp)
-  1000b2:	76 e1                	jbe    100095 <save_multiboot_info+0x16>
+  1000ac:	83 45 f8 01          	addl   $0x1,-0x8(%ebp)
+  1000b0:	83 7d f8 77          	cmpl   $0x77,-0x8(%ebp)
+  1000b4:	76 e1                	jbe    100097 <save_multiboot_info+0x16>
     }
 
     ((multiboot_info_t*) dest)->mmap_addr = (uintptr_t)dest + current;
-  1000b4:	8b 55 0c             	mov    0xc(%ebp),%edx
-  1000b7:	8b 45 f8             	mov    -0x8(%ebp),%eax
-  1000ba:	01 c2                	add    %eax,%edx
-  1000bc:	8b 45 0c             	mov    0xc(%ebp),%eax
-  1000bf:	89 50 30             	mov    %edx,0x30(%eax)
+  1000b6:	8b 55 0c             	mov    0xc(%ebp),%edx
+  1000b9:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  1000bc:	01 c2                	add    %eax,%edx
+  1000be:	8b 45 0c             	mov    0xc(%ebp),%eax
+  1000c1:	89 50 30             	mov    %edx,0x30(%eax)
     current += _save_(dest + current, (uint8_t*)mb_info->mmap_addr, mb_info->mmap_length);
-  1000c2:	8b 45 08             	mov    0x8(%ebp),%eax
-  1000c5:	8b 40 2c             	mov    0x2c(%eax),%eax
-  1000c8:	8b 55 08             	mov    0x8(%ebp),%edx
-  1000cb:	8b 52 30             	mov    0x30(%edx),%edx
-  1000ce:	89 d1                	mov    %edx,%ecx
-  1000d0:	8b 5d 0c             	mov    0xc(%ebp),%ebx
-  1000d3:	8b 55 f8             	mov    -0x8(%ebp),%edx
-  1000d6:	01 da                	add    %ebx,%edx
-  1000d8:	50                   	push   %eax
-  1000d9:	51                   	push   %ecx
-  1000da:	52                   	push   %edx
-  1000db:	e8 6a ff ff ff       	call   10004a <_save_>
-  1000e0:	83 c4 0c             	add    $0xc,%esp
-  1000e3:	01 45 f8             	add    %eax,-0x8(%ebp)
+  1000c4:	8b 45 08             	mov    0x8(%ebp),%eax
+  1000c7:	8b 40 2c             	mov    0x2c(%eax),%eax
+  1000ca:	8b 55 08             	mov    0x8(%ebp),%edx
+  1000cd:	8b 52 30             	mov    0x30(%edx),%edx
+  1000d0:	89 d1                	mov    %edx,%ecx
+  1000d2:	8b 5d 0c             	mov    0xc(%ebp),%ebx
+  1000d5:	8b 55 f8             	mov    -0x8(%ebp),%edx
+  1000d8:	01 da                	add    %ebx,%edx
+  1000da:	50                   	push   %eax
+  1000db:	51                   	push   %ecx
+  1000dc:	52                   	push   %edx
+  1000dd:	e8 6a ff ff ff       	call   10004c <_save_>
+  1000e2:	83 c4 0c             	add    $0xc,%esp
+  1000e5:	01 45 f8             	add    %eax,-0x8(%ebp)
 
     if (present(mb_info->flags, MULTIBOOT_INFO_DRIVE_INFO)) {
-  1000e6:	8b 45 08             	mov    0x8(%ebp),%eax
-  1000e9:	8b 00                	mov    (%eax),%eax
-  1000eb:	25 80 00 00 00       	and    $0x80,%eax
-  1000f0:	85 c0                	test   %eax,%eax
-  1000f2:	74 32                	je     100126 <save_multiboot_info+0xa7>
+  1000e8:	8b 45 08             	mov    0x8(%ebp),%eax
+  1000eb:	8b 00                	mov    (%eax),%eax
+  1000ed:	25 80 00 00 00       	and    $0x80,%eax
+  1000f2:	85 c0                	test   %eax,%eax
+  1000f4:	74 32                	je     100128 <save_multiboot_info+0xa7>
         ((multiboot_info_t*) dest)->drives_addr = (uintptr_t)dest + current;
-  1000f4:	8b 55 0c             	mov    0xc(%ebp),%edx
-  1000f7:	8b 45 f8             	mov    -0x8(%ebp),%eax
-  1000fa:	01 c2                	add    %eax,%edx
-  1000fc:	8b 45 0c             	mov    0xc(%ebp),%eax
-  1000ff:	89 50 38             	mov    %edx,0x38(%eax)
+  1000f6:	8b 55 0c             	mov    0xc(%ebp),%edx
+  1000f9:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  1000fc:	01 c2                	add    %eax,%edx
+  1000fe:	8b 45 0c             	mov    0xc(%ebp),%eax
+  100101:	89 50 38             	mov    %edx,0x38(%eax)
         current += _save_(dest + current, (uint8_t*)mb_info->drives_addr, mb_info->drives_length);
-  100102:	8b 45 08             	mov    0x8(%ebp),%eax
-  100105:	8b 40 34             	mov    0x34(%eax),%eax
-  100108:	8b 55 08             	mov    0x8(%ebp),%edx
-  10010b:	8b 52 38             	mov    0x38(%edx),%edx
-  10010e:	89 d1                	mov    %edx,%ecx
-  100110:	8b 5d 0c             	mov    0xc(%ebp),%ebx
-  100113:	8b 55 f8             	mov    -0x8(%ebp),%edx
-  100116:	01 da                	add    %ebx,%edx
-  100118:	50                   	push   %eax
-  100119:	51                   	push   %ecx
-  10011a:	52                   	push   %edx
-  10011b:	e8 2a ff ff ff       	call   10004a <_save_>
-  100120:	83 c4 0c             	add    $0xc,%esp
-  100123:	01 45 f8             	add    %eax,-0x8(%ebp)
+  100104:	8b 45 08             	mov    0x8(%ebp),%eax
+  100107:	8b 40 34             	mov    0x34(%eax),%eax
+  10010a:	8b 55 08             	mov    0x8(%ebp),%edx
+  10010d:	8b 52 38             	mov    0x38(%edx),%edx
+  100110:	89 d1                	mov    %edx,%ecx
+  100112:	8b 5d 0c             	mov    0xc(%ebp),%ebx
+  100115:	8b 55 f8             	mov    -0x8(%ebp),%edx
+  100118:	01 da                	add    %ebx,%edx
+  10011a:	50                   	push   %eax
+  10011b:	51                   	push   %ecx
+  10011c:	52                   	push   %edx
+  10011d:	e8 2a ff ff ff       	call   10004c <_save_>
+  100122:	83 c4 0c             	add    $0xc,%esp
+  100125:	01 45 f8             	add    %eax,-0x8(%ebp)
     }
     multiboot_info_t* test = (multiboot_info_t*) dest;
-  100126:	8b 45 0c             	mov    0xc(%ebp),%eax
-  100129:	89 45 f0             	mov    %eax,-0x10(%ebp)
+  100128:	8b 45 0c             	mov    0xc(%ebp),%eax
+  10012b:	89 45 f0             	mov    %eax,-0x10(%ebp)
     multiboot_memory_map_t* testmap = (multiboot_memory_map_t*)mb_info->mmap_addr;
-  10012c:	8b 45 08             	mov    0x8(%ebp),%eax
-  10012f:	8b 40 30             	mov    0x30(%eax),%eax
-  100132:	89 45 ec             	mov    %eax,-0x14(%ebp)
+  10012e:	8b 45 08             	mov    0x8(%ebp),%eax
+  100131:	8b 40 30             	mov    0x30(%eax),%eax
+  100134:	89 45 ec             	mov    %eax,-0x14(%ebp)
 }
-  100135:	90                   	nop
-  100136:	8b 5d fc             	mov    -0x4(%ebp),%ebx
-  100139:	c9                   	leave  
-  10013a:	c3                   	ret    
+  100137:	90                   	nop
+  100138:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  10013b:	c9                   	leave  
+  10013c:	c3                   	ret    
 
-0010013b <init_page>:
+0010013d <init_page>:
 
 void init_page(ptd_t* pt)
 {
-  10013b:	55                   	push   %ebp
-  10013c:	89 e5                	mov    %esp,%ebp
-  10013e:	83 ec 30             	sub    $0x30,%esp
+  10013d:	55                   	push   %ebp
+  10013e:	89 e5                	mov    %esp,%ebp
+  100140:	83 ec 30             	sub    $0x30,%esp
     SET_PDE(pt, 0, PDE(PG_PRESENT, pt + PG_MAX_ENTRIES));
-  100141:	8b 45 08             	mov    0x8(%ebp),%eax
-  100144:	05 00 10 00 00       	add    $0x1000,%eax
-  100149:	25 00 f0 ff ff       	and    $0xfffff000,%eax
-  10014e:	83 c8 09             	or     $0x9,%eax
-  100151:	89 c2                	mov    %eax,%edx
-  100153:	8b 45 08             	mov    0x8(%ebp),%eax
-  100156:	89 10                	mov    %edx,(%eax)
+  100143:	8b 45 08             	mov    0x8(%ebp),%eax
+  100146:	05 00 10 00 00       	add    $0x1000,%eax
+  10014b:	25 00 f0 ff ff       	and    $0xfffff000,%eax
+  100150:	83 c8 09             	or     $0x9,%eax
+  100153:	89 c2                	mov    %eax,%edx
+  100155:	8b 45 08             	mov    0x8(%ebp),%eax
+  100158:	89 10                	mov    %edx,(%eax)
     ptd_t * tmp_paged_phy_addr = pt;
-  100158:	8b 45 08             	mov    0x8(%ebp),%eax
-  10015b:	89 45 ec             	mov    %eax,-0x14(%ebp)
+  10015a:	8b 45 08             	mov    0x8(%ebp),%eax
+  10015d:	89 45 ec             	mov    %eax,-0x14(%ebp)
     ptd_t * tmp_paget_phy_addr = pt + 1024;
-  10015e:	8b 45 08             	mov    0x8(%ebp),%eax
-  100161:	05 00 10 00 00       	add    $0x1000,%eax
-  100166:	89 45 e8             	mov    %eax,-0x18(%ebp)
+  100160:	8b 45 08             	mov    0x8(%ebp),%eax
+  100163:	05 00 10 00 00       	add    $0x1000,%eax
+  100168:	89 45 e8             	mov    %eax,-0x18(%ebp)
     //identity map 1M memory
     for(uint32_t i = 0; i < 256; i++)
-  100169:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
-  100170:	eb 20                	jmp    100192 <init_page+0x57>
+  10016b:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
+  100172:	eb 20                	jmp    100194 <init_page+0x57>
         *(tmp_paget_phy_addr + i) = (((i << 12) & 0xFFFFF000UL) | (PG_PREM_RW & 0xfff));
-  100172:	8b 45 fc             	mov    -0x4(%ebp),%eax
-  100175:	c1 e0 0c             	shl    $0xc,%eax
-  100178:	89 c2                	mov    %eax,%edx
-  10017a:	8b 45 fc             	mov    -0x4(%ebp),%eax
-  10017d:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
-  100184:	8b 45 e8             	mov    -0x18(%ebp),%eax
-  100187:	01 c8                	add    %ecx,%eax
-  100189:	83 ca 03             	or     $0x3,%edx
-  10018c:	89 10                	mov    %edx,(%eax)
+  100174:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  100177:	c1 e0 0c             	shl    $0xc,%eax
+  10017a:	89 c2                	mov    %eax,%edx
+  10017c:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  10017f:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
+  100186:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  100189:	01 c8                	add    %ecx,%eax
+  10018b:	83 ca 03             	or     $0x3,%edx
+  10018e:	89 10                	mov    %edx,(%eax)
     for(uint32_t i = 0; i < 256; i++)
-  10018e:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
-  100192:	81 7d fc ff 00 00 00 	cmpl   $0xff,-0x4(%ebp)
-  100199:	76 d7                	jbe    100172 <init_page+0x37>
+  100190:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
+  100194:	81 7d fc ff 00 00 00 	cmpl   $0xff,-0x4(%ebp)
+  10019b:	76 d7                	jbe    100174 <init_page+0x37>
 
     //identity map virkernel_init memory
     for(uint32_t i = 0; i < LOADOS_PAGE_COUNT; i++)
-  10019b:	c7 45 f8 00 00 00 00 	movl   $0x0,-0x8(%ebp)
-  1001a2:	eb 29                	jmp    1001cd <init_page+0x92>
+  10019d:	c7 45 f8 00 00 00 00 	movl   $0x0,-0x8(%ebp)
+  1001a4:	eb 29                	jmp    1001cf <init_page+0x92>
         *(tmp_paget_phy_addr + i + 256) = ((((i << 12) + MEM_1M) & 0xFFFFF000UL) | (PG_PREM_RW & 0xfff));
-  1001a4:	8b 45 f8             	mov    -0x8(%ebp),%eax
-  1001a7:	c1 e0 0c             	shl    $0xc,%eax
-  1001aa:	8d 90 00 00 10 00    	lea    0x100000(%eax),%edx
-  1001b0:	8b 45 f8             	mov    -0x8(%ebp),%eax
-  1001b3:	05 00 01 00 00       	add    $0x100,%eax
-  1001b8:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
-  1001bf:	8b 45 e8             	mov    -0x18(%ebp),%eax
-  1001c2:	01 c8                	add    %ecx,%eax
-  1001c4:	83 ca 03             	or     $0x3,%edx
-  1001c7:	89 10                	mov    %edx,(%eax)
+  1001a6:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  1001a9:	c1 e0 0c             	shl    $0xc,%eax
+  1001ac:	8d 90 00 00 10 00    	lea    0x100000(%eax),%edx
+  1001b2:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  1001b5:	05 00 01 00 00       	add    $0x100,%eax
+  1001ba:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
+  1001c1:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  1001c4:	01 c8                	add    %ecx,%eax
+  1001c6:	83 ca 03             	or     $0x3,%edx
+  1001c9:	89 10                	mov    %edx,(%eax)
     for(uint32_t i = 0; i < LOADOS_PAGE_COUNT; i++)
-  1001c9:	83 45 f8 01          	addl   $0x1,-0x8(%ebp)
-  1001cd:	b8 00 60 10 00       	mov    $0x106000,%eax
-  1001d2:	2d 01 f0 0f 00       	sub    $0xff001,%eax
-  1001d7:	c1 e8 0c             	shr    $0xc,%eax
-  1001da:	39 45 f8             	cmp    %eax,-0x8(%ebp)
-  1001dd:	72 c5                	jb     1001a4 <init_page+0x69>
+  1001cb:	83 45 f8 01          	addl   $0x1,-0x8(%ebp)
+  1001cf:	b8 00 60 10 00       	mov    $0x106000,%eax
+  1001d4:	2d 01 f0 0f 00       	sub    $0xff001,%eax
+  1001d9:	c1 e8 0c             	shr    $0xc,%eax
+  1001dc:	39 45 f8             	cmp    %eax,-0x8(%ebp)
+  1001df:	72 c5                	jb     1001a6 <init_page+0x69>
 
     //now we map the kernel
     //calculate the virtrue kernrl page index
     uint32_t virk_pde_index = PD_INDEX(sym_val(virkernel_start));
-  1001df:	b8 00 60 10 c0       	mov    $0xc0106000,%eax
-  1001e4:	c1 e8 16             	shr    $0x16,%eax
-  1001e7:	89 45 e4             	mov    %eax,-0x1c(%ebp)
+  1001e1:	b8 00 60 10 c0       	mov    $0xc0106000,%eax
+  1001e6:	c1 e8 16             	shr    $0x16,%eax
+  1001e9:	89 45 e4             	mov    %eax,-0x1c(%ebp)
     uint32_t virk_pte_index = PT_INDEX(sym_val(virkernel_start));
-  1001ea:	b8 00 60 10 c0       	mov    $0xc0106000,%eax
-  1001ef:	c1 e8 0c             	shr    $0xc,%eax
-  1001f2:	25 ff 03 00 00       	and    $0x3ff,%eax
-  1001f7:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  1001ec:	b8 00 60 10 c0       	mov    $0xc0106000,%eax
+  1001f1:	c1 e8 0c             	shr    $0xc,%eax
+  1001f4:	25 ff 03 00 00       	and    $0x3ff,%eax
+  1001f9:	89 45 e0             	mov    %eax,-0x20(%ebp)
     uint32_t virk_pg_counts = KERNEL_PAGE_COUNT;
-  1001fa:	b8 00 40 29 c0       	mov    $0xc0294000,%eax
-  1001ff:	05 00 10 00 00       	add    $0x1000,%eax
-  100204:	83 e8 01             	sub    $0x1,%eax
-  100207:	ba 00 60 10 c0       	mov    $0xc0106000,%edx
-  10020c:	29 d0                	sub    %edx,%eax
-  10020e:	c1 e8 0c             	shr    $0xc,%eax
-  100211:	89 45 dc             	mov    %eax,-0x24(%ebp)
+  1001fc:	b8 00 40 29 c0       	mov    $0xc0294000,%eax
+  100201:	05 00 10 00 00       	add    $0x1000,%eax
+  100206:	83 e8 01             	sub    $0x1,%eax
+  100209:	ba 00 60 10 c0       	mov    $0xc0106000,%edx
+  10020e:	29 d0                	sub    %edx,%eax
+  100210:	c1 e8 0c             	shr    $0xc,%eax
+  100213:	89 45 dc             	mov    %eax,-0x24(%ebp)
 
     //regist the vir_kernel page to page direction
     //we give 3 pagetable to virkel, is 3 * 4 = 12 mib size
     for(uint32_t i = 0; i < PG_TABLE_STACK - PG_TABLE_KERNEL; i++)
-  100214:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
-  10021b:	eb 34                	jmp    100251 <init_page+0x116>
+  100216:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
+  10021d:	eb 34                	jmp    100253 <init_page+0x116>
     {
         *(pt + virk_pde_index + i) = PDE(PG_PREM_RW, PT_ADDR(pt, PG_TABLE_KERNEL + i));
-  10021d:	8b 45 f4             	mov    -0xc(%ebp),%eax
-  100220:	83 c0 02             	add    $0x2,%eax
-  100223:	c1 e0 0c             	shl    $0xc,%eax
-  100226:	89 c2                	mov    %eax,%edx
-  100228:	8b 45 08             	mov    0x8(%ebp),%eax
-  10022b:	01 d0                	add    %edx,%eax
-  10022d:	25 00 f0 ff ff       	and    $0xfffff000,%eax
-  100232:	89 c2                	mov    %eax,%edx
-  100234:	8b 4d e4             	mov    -0x1c(%ebp),%ecx
-  100237:	8b 45 f4             	mov    -0xc(%ebp),%eax
-  10023a:	01 c8                	add    %ecx,%eax
-  10023c:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
-  100243:	8b 45 08             	mov    0x8(%ebp),%eax
-  100246:	01 c8                	add    %ecx,%eax
-  100248:	83 ca 0b             	or     $0xb,%edx
-  10024b:	89 10                	mov    %edx,(%eax)
+  10021f:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  100222:	83 c0 02             	add    $0x2,%eax
+  100225:	c1 e0 0c             	shl    $0xc,%eax
+  100228:	89 c2                	mov    %eax,%edx
+  10022a:	8b 45 08             	mov    0x8(%ebp),%eax
+  10022d:	01 d0                	add    %edx,%eax
+  10022f:	25 00 f0 ff ff       	and    $0xfffff000,%eax
+  100234:	89 c2                	mov    %eax,%edx
+  100236:	8b 4d e4             	mov    -0x1c(%ebp),%ecx
+  100239:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  10023c:	01 c8                	add    %ecx,%eax
+  10023e:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
+  100245:	8b 45 08             	mov    0x8(%ebp),%eax
+  100248:	01 c8                	add    %ecx,%eax
+  10024a:	83 ca 0b             	or     $0xb,%edx
+  10024d:	89 10                	mov    %edx,(%eax)
     for(uint32_t i = 0; i < PG_TABLE_STACK - PG_TABLE_KERNEL; i++)
-  10024d:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
-  100251:	83 7d f4 02          	cmpl   $0x2,-0xc(%ebp)
-  100255:	76 c6                	jbe    10021d <init_page+0xe2>
+  10024f:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
+  100253:	83 7d f4 02          	cmpl   $0x2,-0xc(%ebp)
+  100257:	76 c6                	jbe    10021f <init_page+0xe2>
     }
 
     //avoid kernel size > prepared page count
     if(virk_pg_counts > (PG_TABLE_STACK - PG_TABLE_KERNEL) * 1024)
-  100257:	81 7d dc 00 0c 00 00 	cmpl   $0xc00,-0x24(%ebp)
-  10025e:	76 02                	jbe    100262 <init_page+0x127>
+  100259:	81 7d dc 00 0c 00 00 	cmpl   $0xc00,-0x24(%ebp)
+  100260:	76 02                	jbe    100264 <init_page+0x127>
     {
         while(1);
-  100260:	eb fe                	jmp    100260 <init_page+0x125>
+  100262:	eb fe                	jmp    100262 <init_page+0x125>
     }
 
     //calcul the phy address
     uint32_t virk_phy_addr = V2P(&virkernel_start);
-  100262:	b8 00 60 10 c0       	mov    $0xc0106000,%eax
-  100267:	05 00 00 00 40       	add    $0x40000000,%eax
-  10026c:	89 45 d8             	mov    %eax,-0x28(%ebp)
+  100264:	b8 00 60 10 c0       	mov    $0xc0106000,%eax
+  100269:	05 00 00 00 40       	add    $0x40000000,%eax
+  10026e:	89 45 d8             	mov    %eax,-0x28(%ebp)
     //map virtrue kernel page
     for(uint32_t i = 0; i < virk_pg_counts; i++)
-  10026f:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp)
-  100276:	eb 36                	jmp    1002ae <init_page+0x173>
+  100271:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp)
+  100278:	eb 36                	jmp    1002b0 <init_page+0x173>
     {
         *(tmp_paget_phy_addr + 1024 + virk_pte_index + i) = (((virk_phy_addr + (i << 12)) & 0xFFFFF000UL) | (PG_PREM_RW & 0xfff));
-  100278:	8b 45 f0             	mov    -0x10(%ebp),%eax
-  10027b:	c1 e0 0c             	shl    $0xc,%eax
-  10027e:	89 c2                	mov    %eax,%edx
-  100280:	8b 45 d8             	mov    -0x28(%ebp),%eax
-  100283:	01 d0                	add    %edx,%eax
-  100285:	25 00 f0 ff ff       	and    $0xfffff000,%eax
-  10028a:	89 c2                	mov    %eax,%edx
-  10028c:	8b 4d e0             	mov    -0x20(%ebp),%ecx
-  10028f:	8b 45 f0             	mov    -0x10(%ebp),%eax
-  100292:	01 c8                	add    %ecx,%eax
-  100294:	05 00 04 00 00       	add    $0x400,%eax
-  100299:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
-  1002a0:	8b 45 e8             	mov    -0x18(%ebp),%eax
-  1002a3:	01 c8                	add    %ecx,%eax
-  1002a5:	83 ca 03             	or     $0x3,%edx
-  1002a8:	89 10                	mov    %edx,(%eax)
+  10027a:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  10027d:	c1 e0 0c             	shl    $0xc,%eax
+  100280:	89 c2                	mov    %eax,%edx
+  100282:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  100285:	01 d0                	add    %edx,%eax
+  100287:	25 00 f0 ff ff       	and    $0xfffff000,%eax
+  10028c:	89 c2                	mov    %eax,%edx
+  10028e:	8b 4d e0             	mov    -0x20(%ebp),%ecx
+  100291:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  100294:	01 c8                	add    %ecx,%eax
+  100296:	05 00 04 00 00       	add    $0x400,%eax
+  10029b:	8d 0c 85 00 00 00 00 	lea    0x0(,%eax,4),%ecx
+  1002a2:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  1002a5:	01 c8                	add    %ecx,%eax
+  1002a7:	83 ca 03             	or     $0x3,%edx
+  1002aa:	89 10                	mov    %edx,(%eax)
     for(uint32_t i = 0; i < virk_pg_counts; i++)
-  1002aa:	83 45 f0 01          	addl   $0x1,-0x10(%ebp)
-  1002ae:	8b 45 f0             	mov    -0x10(%ebp),%eax
-  1002b1:	3b 45 dc             	cmp    -0x24(%ebp),%eax
-  1002b4:	72 c2                	jb     100278 <init_page+0x13d>
+  1002ac:	83 45 f0 01          	addl   $0x1,-0x10(%ebp)
+  1002b0:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  1002b3:	3b 45 dc             	cmp    -0x24(%ebp),%eax
+  1002b6:	72 c2                	jb     10027a <init_page+0x13d>
     }
 
     //self map pd, to give the pd virture address
     SET_PDE(pt, 1023, PDE(T_SELF_REF_PERM, pt));
-  1002b6:	8b 45 08             	mov    0x8(%ebp),%eax
-  1002b9:	25 00 f0 ff ff       	and    $0xfffff000,%eax
-  1002be:	89 c2                	mov    %eax,%edx
-  1002c0:	8b 45 08             	mov    0x8(%ebp),%eax
-  1002c3:	05 fc 0f 00 00       	add    $0xffc,%eax
-  1002c8:	83 ca 1b             	or     $0x1b,%edx
-  1002cb:	89 10                	mov    %edx,(%eax)
+  1002b8:	8b 45 08             	mov    0x8(%ebp),%eax
+  1002bb:	25 00 f0 ff ff       	and    $0xfffff000,%eax
+  1002c0:	89 c2                	mov    %eax,%edx
+  1002c2:	8b 45 08             	mov    0x8(%ebp),%eax
+  1002c5:	05 fc 0f 00 00       	add    $0xffc,%eax
+  1002ca:	83 ca 1b             	or     $0x1b,%edx
+  1002cd:	89 10                	mov    %edx,(%eax)
 }
-  1002cd:	90                   	nop
-  1002ce:	c9                   	leave  
-  1002cf:	c3                   	ret    
+  1002cf:	90                   	nop
+  1002d0:	c9                   	leave  
+  1002d1:	c3                   	ret    
 
-001002d0 <kerner_init>:
+001002d2 <kerner_init>:
 
 void kerner_init(ptd_t* pt, uint32_t pt_size)
 {
-  1002d0:	55                   	push   %ebp
-  1002d1:	89 e5                	mov    %esp,%ebp
-  1002d3:	83 ec 10             	sub    $0x10,%esp
+  1002d2:	55                   	push   %ebp
+  1002d3:	89 e5                	mov    %esp,%ebp
+  1002d5:	83 ec 10             	sub    $0x10,%esp
     uint8_t* kpg = (uint8_t*) pt;
-  1002d6:	8b 45 08             	mov    0x8(%ebp),%eax
-  1002d9:	89 45 f8             	mov    %eax,-0x8(%ebp)
+  1002d8:	8b 45 08             	mov    0x8(%ebp),%eax
+  1002db:	89 45 f8             	mov    %eax,-0x8(%ebp)
     for (uint32_t i = 0; i < pt_size; i++)
-  1002dc:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
-  1002e3:	eb 0f                	jmp    1002f4 <kerner_init+0x24>
+  1002de:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
+  1002e5:	eb 0f                	jmp    1002f6 <kerner_init+0x24>
     {
         *(kpg + i) = 0;
-  1002e5:	8b 55 f8             	mov    -0x8(%ebp),%edx
-  1002e8:	8b 45 fc             	mov    -0x4(%ebp),%eax
-  1002eb:	01 d0                	add    %edx,%eax
-  1002ed:	c6 00 00             	movb   $0x0,(%eax)
+  1002e7:	8b 55 f8             	mov    -0x8(%ebp),%edx
+  1002ea:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  1002ed:	01 d0                	add    %edx,%eax
+  1002ef:	c6 00 00             	movb   $0x0,(%eax)
     for (uint32_t i = 0; i < pt_size; i++)
-  1002f0:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
-  1002f4:	8b 45 fc             	mov    -0x4(%ebp),%eax
-  1002f7:	3b 45 0c             	cmp    0xc(%ebp),%eax
-  1002fa:	72 e9                	jb     1002e5 <kerner_init+0x15>
+  1002f2:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
+  1002f6:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  1002f9:	3b 45 0c             	cmp    0xc(%ebp),%eax
+  1002fc:	72 e9                	jb     1002e7 <kerner_init+0x15>
     }
     init_page(pt);
-  1002fc:	ff 75 08             	push   0x8(%ebp)
-  1002ff:	e8 37 fe ff ff       	call   10013b <init_page>
-  100304:	83 c4 04             	add    $0x4,%esp
-  100307:	90                   	nop
-  100308:	c9                   	leave  
-  100309:	c3                   	ret    
+  1002fe:	ff 75 08             	push   0x8(%ebp)
+  100301:	e8 37 fe ff ff       	call   10013d <init_page>
+  100306:	83 c4 04             	add    $0x4,%esp
+  100309:	90                   	nop
+  10030a:	c9                   	leave  
+  10030b:	c3                   	ret    
 
 Disassembly of section .text:
 
