@@ -1,5 +1,6 @@
 #include <kernel/memory/vir_mem.h>
 #include <libs/mstring.h>
+#include <libs/mstdio.h>
 
 void vmm_init() {
     // TODO: something here?
@@ -112,7 +113,7 @@ void vmm_unmap_page(void* vpn) {
     if (pde) {
         pt_t* pt = (pt_t*)PT_VADDR(pd_offset);
         uint32_t pte = pt[pt_offset];
-        if (IS_CACHED(pte) && pmm_free_page(pte)) {
+        if (IS_PRESENT(pte) && pmm_free_page(pte)) {
             // 刷新TLB
             #ifdef __ARCH_IA32
             __asm__("invlpg (%0)" :: "r"((uintptr_t)vpn) : "memory");
@@ -155,7 +156,11 @@ int __vmm_map_alloc(pid_t pid,
 
 
     // See if attr make sense
-    assert(attr <= 128);
+    if(attr > 128)
+    {
+        kprintf("__vmm_map_alloc false, attr > 128!");
+        return 0;
+    }
 
     if (!ptd[l1_inx]) {
         uint8_t* new_pt_pa = pmm_alloc_page(pid, PP_FGPERSIST);
@@ -207,9 +212,8 @@ void* vmm_map_page(pid_t pid, void* va, void* pa, pt_attr dattr, pt_attr tattr) 
             pt = (pt_t*)PT_VADDR(pd_offset);
         }
         // 页表有空位，只需要开辟一个新的 PTE
-        if (pt && !pt[pt_offset]) {
-            pt[pt_offset] = PTE(tattr, pa);
-            return V_ADDR(pd_offset, pt_offset, PG_OFFSET(va));
+        if (__vmm_map_alloc(pid, pd_offset, pt_offset, pa, dattr, false)) {
+            return (void*)V_ADDR(pd_offset, pt_offset, PG_OFFSET(va));
         }
         pt_offset++;
     }
@@ -219,26 +223,28 @@ void* vmm_map_page(pid_t pid, void* va, void* pa, pt_attr dattr, pt_attr tattr) 
         return NULL;
     }
 
-    // 页目录有空位，需要开辟一个新的 PDE
-    uint8_t* new_pt_pa = pmm_alloc_page(pid, PP_FGPERSIST);
-    
-    // 物理内存已满！
-    if (!new_pt_pa) {
+    if (!__vmm_map_alloc(pid, pd_offset, pt_offset, (uintptr_t)pa, dattr, false))
         return NULL;
-    }
+    // // 页目录有空位，需要开辟一个新的 PDE
+    // uint8_t* new_pt_pa = pmm_alloc_page(pid, PP_FGPERSIST);
     
-    ptd[pd_offset] = PDE(dattr, new_pt_pa);
+    // // 物理内存已满！
+    // if (!new_pt_pa) {
+    //     return NULL;
+    // }
     
-    memset((void*)PT_VADDR(pd_offset), 0, PM_PAGE_SIZE);
+    // ptd[pd_offset] = PDE(dattr, new_pt_pa);
+    
+    // memset((void*)PT_VADDR(pd_offset), 0, PM_PAGE_SIZE);
 
 
-    if ((HAS_FLAGS(tattr, PG_PRESENT) && HAS_FLAGS(dattr, PG_PRESENT))) {
-        // add one on reference count, regardless of existence.
-        pmm_ref_page(pid, pa);
-    }
-    pt[pt_offset] = PTE(tattr, pa);
+    // if ((HAS_FLAGS(tattr, PG_PRESENT) && HAS_FLAGS(dattr, PG_PRESENT))) {
+    //     // add one on reference count, regardless of existence.
+    //     pmm_ref_page(pid, pa);
+    // }
+    // pt[pt_offset] = PTE(tattr, pa);
 
-    return V_ADDR(pd_offset, pt_offset, PG_OFFSET(va));
+    return (void*)V_ADDR(pd_offset, pt_offset, PG_OFFSET(va));
 }
 
 void* vmm_cover_map_page(pid_t pid, void* va, void* pa, pt_attr dattr, pt_attr tattr)
@@ -250,44 +256,46 @@ void* vmm_cover_map_page(pid_t pid, void* va, void* pa, pt_attr dattr, pt_attr t
 
     uintptr_t pd_offset = PD_INDEX(va);
     uintptr_t pt_offset = PT_INDEX(va);
-    ptd_t* ptd = (ptd_t*)PTD_BASE_VADDR;
 
-    // 在页表与页目录中找到一个可用的空位进行映射（位于va或其附近）
-    ptd_t* pde = ptd[pd_offset];
-    pt_t* pt = (uintptr_t)PT_VADDR(pd_offset); 
-    if(!pde)
-    {
-        uint8_t* new_pt_pa = pmm_alloc_page(pid, PP_FGPERSIST);
-        if (!new_pt_pa) {
-            return NULL;
-        }
+    if(!__vmm_map_alloc(pid, pd_offset, pt_offset, (uintptr_t)pa, dattr, true)) return NULL;
+    // ptd_t* ptd = (ptd_t*)PTD_BASE_VADDR;
 
-        ptd[pd_offset] = PDE(dattr, new_pt_pa);
-        memset((void*)PT_VADDR(pd_offset), 0, PM_PAGE_SIZE);
+    // // 在页表与页目录中找到一个可用的空位进行映射（位于va或其附近）
+    // ptd_t* pde = ptd[pd_offset];
+    // pt_t* pt = (uintptr_t)PT_VADDR(pd_offset); 
+    // if(!pde)
+    // {
+    //     uint8_t* new_pt_pa = pmm_alloc_page(pid, PP_FGPERSIST);
+    //     if (!new_pt_pa) {
+    //         return NULL;
+    //     }
 
-    }   
+    //     ptd[pd_offset] = PDE(dattr | PG_WRITE, new_pt_pa);
+    //     memset((void*)PT_VADDR(pd_offset), 0, PM_PAGE_SIZE);
 
-    // 页目录有空位，需要开辟一个新的 PDE
-    uint8_t* new_pt_pa = pmm_alloc_page(pid, PP_FGPERSIST);
+    // }   
+
+    // // 页目录有空位，需要开辟一个新的 PDE
+    // uint8_t* new_pt_pa = pmm_alloc_page(pid, PP_FGPERSIST);
     
-    // 物理内存已满！
-    if (!new_pt_pa) {
-        return NULL;
-    }
+    // // 物理内存已满！
+    // if (!new_pt_pa) {
+    //     return NULL;
+    // }
     
-    ptd[pd_offset] = PDE(dattr, new_pt_pa);
+    // ptd[pd_offset] = PDE(dattr, new_pt_pa);
     
-    memset((void*)PT_VADDR(pd_offset), 0, PM_PAGE_SIZE);
+    // memset((void*)PT_VADDR(pd_offset), 0, PM_PAGE_SIZE);
 
-    if (HAS_FLAGS(tattr, PG_PRESENT) && HAS_FLAGS(dattr, PG_PRESENT)) {
-        // add one on reference count, regardless of existence.
-        pmm_ref_page(pid, pa);
-    }
-    pt[pt_offset] = PTE(tattr, pa);
+    // if (HAS_FLAGS(tattr, PG_PRESENT) && HAS_FLAGS(dattr, PG_PRESENT)) {
+    //     // add one on reference count, regardless of existence.
+    //     pmm_ref_page(pid, pa);
+    // }
+    // pt[pt_offset] = PTE(tattr, pa);
 
     cpu_invplg(va);
 
-    return V_ADDR(pd_offset, pt_offset, PG_OFFSET(va));
+    return va;
 }
 
 void* vmm_alloc_page(pid_t pid, void* vpn, void** pa, pt_attr dattr, pt_attr tattr)
@@ -303,7 +311,7 @@ void* vmm_alloc_page(pid_t pid, void* vpn, void** pa, pt_attr dattr, pt_attr tat
 
 int vmm_alloc_pages(pid_t pid, void* va, size_t sz, pt_attr tattr, pp_attr_t pattr)
 {
-    assert((uintptr_t)va % PG_SIZE == 0) assert(sz % PG_SIZE == 0);
+    //assert((uintptr_t)va % PG_SIZE == 0) assert(sz % PG_SIZE == 0);
 
     void* va_ = va;
     for (size_t i = 0; i < (sz >> PG_SIZE_BITS); i++, va_ += PG_SIZE) {
@@ -328,7 +336,7 @@ int vmm_alloc_pages(pid_t pid, void* va, size_t sz, pt_attr tattr, pp_attr_t pat
 
 int vmm_set_mapping(pid_t pid, void* va, void* pa, pt_attr attr)
 {
-    assert(((uintptr_t)va & 0xFFFU) == 0);
+    //assert(((uintptr_t)va & 0xFFFU) == 0);
 
     uint32_t l1_index = PD_INDEX(va);
     uint32_t l2_index = PT_INDEX(va);
@@ -344,7 +352,7 @@ int vmm_set_mapping(pid_t pid, void* va, void* pa, pt_attr attr)
 
 void __vmm_unmap_unalloc(pid_t pid, void* va, int free_ppage)
 {
-    assert(((uintptr_t)va & 0xFFFU) == 0);
+    //assert(((uintptr_t)va & 0xFFFU) == 0);
 
     uint32_t l1_index = PD_INDEX(va);
     uint32_t l2_index = PT_INDEX(va);
@@ -359,12 +367,12 @@ void __vmm_unmap_unalloc(pid_t pid, void* va, int free_ppage)
     if (ptd[l1_index]) {
         pt_t* pt = (uintptr_t)PT_VADDR(l1_index);
         pt_t pte = pt[l2_index];
-        if (IS_CACHED(pte) && free_ppage) {
+        if (IS_PRESENT(pte) && free_ppage) {
             pmm_free_page(pid, (void*)pte);
         }
         cpu_invplg(va);
-
-        pt[l2_index] = 0;
+        //kprintf("%d ", l2_index);
+        pt[l2_index] = NULL;
     }
 }
 
@@ -389,8 +397,9 @@ v_mapping vmm_lookup(void* va)
 
     v_mapping mapping = { .flags = 0, .pa = 0, .pn = 0 };
     if (ptd[l1_index]) {
-        pt_t* pt = (uintptr_t)PT_VADDR(l1_index);
-        pt_t* l2pte = &pt[l2_index];
+        //pt_t* pt = (uintptr_t)PT_VADDR(l1_index);
+        pt_t* l2pte = &(((pt_t*)PT_VADDR(l1_index))[l2_index]);
+        //pt_t* l2pte = &pt[l2_index];
         if (l2pte) {
             mapping.flags = PG_ENTRY_FLAGS(*l2pte);
             mapping.pa = PG_ENTRY_ADDR(*l2pte);

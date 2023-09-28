@@ -4,7 +4,7 @@
 #define MB_INFO_SPACE_SIZE 0x1000
 /* C symbol format. HAVE_ASM_USCORE is defined by configure. */
 #define MULTIBOOT_HEADER_FLAGS   MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO
-#define KPG_SIZE    6*4*1024        
+#define KPG_SIZE    10*4*1024        
 
 .section .multiboot_header
     .align 4
@@ -27,6 +27,12 @@
     5 page tables:
         1. Mapping reserved area and hhk_init
         2-5. Remapping the kernels
+    caus we change the pmm_bitmap in to pmm_struct, it's size is from 128 * 1024 to 1024 * 1024
+    so the kernel now is more than 3 pages, we need give more pages, we give 10
+    1 page directory, 
+    9 page tables:
+        1. Mapping reserved area and hhk_init
+        2-9. Remapping the kernels
 */
 
 .section .kernerl_page
@@ -65,7 +71,7 @@
 
     //2. start page,(CR0.PG=1)
         movl %cr0, %eax
-        orl $0x80010000, %eax
+        orl $0x80000000, %eax
         movl %eax, %cr0
 
     //now we are in virture mem, go to virkeenel

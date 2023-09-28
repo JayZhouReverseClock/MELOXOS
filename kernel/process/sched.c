@@ -18,14 +18,16 @@ extern void __proc_table;
 
 struct scheduler sched_ctx;
 
-void sched_init()
+int sched_init()
 {
     size_t pg_size = ROUNDUP(sizeof(struct m_pcb) * MAX_PROCESS, 0x1000);
-    vmm_alloc_pages(KERNEL_PID, &__proc_table, pg_size, PG_PREM_RW, PP_FGPERSIST);
-
-    sched_ctx = (struct scheduler){ ._procs = (struct m_pcb*)&__proc_table,
+    if(vmm_alloc_pages(KERNEL_PID, &__proc_table, pg_size, PG_PREM_RW, PP_FGPERSIST)){
+        sched_ctx = (struct scheduler){ ._procs = (struct m_pcb*)&__proc_table,
                                     .ptable_len = 0,
                                     .procs_index = 0 };
+                                    return 1;}
+    return 0;
+    
 }
 
 void run(struct m_pcb* proc)

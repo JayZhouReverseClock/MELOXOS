@@ -3,7 +3,8 @@
 struct x86_tss _tss = {
     .link = 0,
     .esp0 = KSTACK_START,
-    .ss0  = KDATA_SEG
+    .ss0  = KDATA_SEG,
+    .__padding = {0}
 };
 
 void tss_update_esp(uint32_t esp0) {

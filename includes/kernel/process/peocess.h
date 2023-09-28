@@ -38,8 +38,8 @@ struct m_pcb{
 
 pid_t m_fork();
 void init_proc(struct m_pcb* pcb);
-void* copy_page(pid_t pid, uintptr_t mount_point);
-void* copy_all_page(struct m_pcb* proc, uintptr_t usedMnt);
+void* copy_pagetable(pid_t pid, uintptr_t mount_point);
+void* setup_proc_mem(struct m_pcb* proc, uintptr_t usedMnt);
 void terminate_proc(int exit_code);
 pid_t destroy_process(pid_t pid);
 

@@ -17,8 +17,8 @@ typedef struct {
     uint32_t *pte;
 } v_mapping;
 
-#define K_STACK_SIZE            0x100000U
-#define K_STACK_START           ((0xFFBFFFFFU - K_STACK_SIZE) + 1)
+#define K_STACK_SIZE             (64 << 10)
+#define K_STACK_START            ((0xFFBFFFFFU - K_STACK_SIZE) + 1)
 // 页目录的虚拟基地址，可以用来访问到各个PDE
 #define PTD_BASE_VADDR                0xFFFFF000U
 
@@ -61,7 +61,7 @@ typedef struct {
 #define PG_PREM_URW            PG_PRESENT | PG_WRITE | PG_ALLOW_USER
 #define T_SELF_REF_PERM        PG_PREM_RW | PG_DISABLE_CACHE | PG_WRITE_THROUGH
 
-#define IS_CACHED(entry)    ((entry & 0x1))
+#define IS_PRESENT(entry)    ((entry & 0x1))
 #define PG_ALIGN(addr)          ((uintptr_t)(addr)  & 0xFFFFF000UL)
 #define PDE(flags, pt_addr)     (PG_ALIGN(pt_addr) | (((flags) | PG_WRITE_THROUGH) & 0xfff))
 #define PTE(flags, pg_addr)     (PG_ALIGN(pg_addr) | ((flags) & 0xfff))
@@ -86,5 +86,6 @@ typedef struct {
 #define PG_MOUNT_4          (PG_MOUNT_BASE - 0x3000)
 
 #define PTE_MOUNTED(mnt, vpn)     (((pt_t*)((mnt) | (((vpn) & 0xffc00) << 2)))[(vpn) & 0x3ff])
+//#define PTE_MOUNTED(mnt, vpn)     (((pt_t*)((mnt) | ((vpn) & 0x3ff000)))[(vpn) & 0x3ff])
 
 #endif

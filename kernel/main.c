@@ -36,10 +36,10 @@ extern void __init_phykernel_end;
 ptd_t* __kernel_ptd;
 struct m_pcb tmp;
 /* Forward declarations. */
-void _kernel_init (unsigned long addr);
+void _vir_kernel_init (unsigned long addr);
 extern void __proc0(); /* proc0.c */
 
-void _kernel_init(unsigned long addr)
+void _vir_kernel_init(unsigned long addr)
 {
     multiboot_info_t *mbi;
     mbi = (multiboot_info_t *) addr;
@@ -105,48 +105,49 @@ void _kernel_init(unsigned long addr)
     // 重映射VGA文本缓冲区（以后会变成显存，i.e., framebuffer）
     for (size_t i = 0; i < vga_buf_pgs; i++)
     {
-        vmm_map_page(KERNEL_PID, VGA_BUFFER_VADDR + (i << 12), VIDEO + (i << 12), PG_PREM_RW, PG_PREM_RW);
+        pt_t* test = vmm_map_page(KERNEL_PID, VGA_BUFFER_VADDR + (i << 12), VIDEO + (i << 12), PG_PREM_RW, PG_PREM_RW);
+        //kprintf("[MM] vga vaddr %x\n", test);
     }
     set_vga_buffer(VGA_BUFFER_VADDR);
     kprintf("[MM] Mapped VGA to %x.\n", VGA_BUFFER_VADDR);
 
     // 为内核创建一个专属栈空间。
     for (size_t i = 0; i < (K_STACK_SIZE >> 12); i++) {
-        vmm_alloc_page(KERNEL_PID, K_STACK_START + (i << 12), NULL, PG_PREM_RW, PG_PREM_RW);
+        pt_t* test = vmm_alloc_page(KERNEL_PID, (void*)K_STACK_START + (i << 12), NULL, PG_PREM_RW, PG_PREM_RW);
+        //kprintf("[MM] kernel paddr %x", test);
     }
-    kprintf("[MM] Allocated %d pages for stack start at %p\n", K_STACK_SIZE>>12, K_STACK_START);
+    kprintf("[MM] Allocated %d pages for stack start at 0x%x\n", K_STACK_SIZE>>12, K_STACK_START);
 
     //give malloc init
-    mem_init();
-    kprintf("[MM] Malloc Init Success \n");
+    //mem_init();
+    //kprintf("[MM] Malloc Init Success \n");
     kprintf("[KERNEL] === Initialization Done === \n\n");
 
     vga_put_str("MELOX OS\n");
      //__asm__("int $1");
 }
 
-void _kernel_finnal_init() {
-    //kprintf("[KERNEL] === Post Initialization === \n");
-    size_t virk_init_pg_count = ((uintptr_t)(&__init_phykernel_end)) >> 12;
-    kprintf("[MM] Releaseing %d pages from 0x0.\n", virk_init_pg_count);
+// void _kernel_finnal_init() {
+//     //kprintf("[KERNEL] === Post Initialization === \n");
+//     size_t virk_init_pg_count = ((uintptr_t)(&__init_phykernel_end)) >> 12;
     
-    // // 清除 hhk_init 与前1MiB的映射
-    for (size_t i = 0; i < virk_init_pg_count; i++) {
+//     // // 清除 hhk_init 与前1MiB的映射
+//     for (size_t i = 0; i < virk_init_pg_count; i++) {
 
-        vmm_unmap_page(KERNEL_PID, (i << 12));
-    }
+//         vmm_unmap_page(KERNEL_PID, (i << 12));
+//     }
+//     kprintf("[MM] Releaseing %d pages from 0x0.\n", virk_init_pg_count);
+//     // // 清除 hhk_init 与前1MiB的映射
+//     // for (size_t i = 0; i < 256; i++) {
 
-    // // 清除 hhk_init 与前1MiB的映射
-    // for (size_t i = 0; i < 256; i++) {
+//     //     vmm_unmap_page((i << 12));
+//     // }
+//     // for (size_t i = 256; i < virk_init_pg_count; i++) {
 
-    //     vmm_unmap_page((i << 12));
-    // }
-    // for (size_t i = 256; i < virk_init_pg_count; i++) {
-
-    //     vmm_unmap_page((i << 12));
-    // }
-    kprintf("[KERNEL] === Post Initialization Done === \n\n");
-}
+//     //     vmm_unmap_page((i << 12));
+//     // }
+//     //kprintf("[KERNEL] === Post Initialization Done === \n\n");
+// }
 
 void creat_proc0();
 void _kernel_main()
@@ -175,7 +176,8 @@ void _kernel_main()
     // init_keyboard();
 
     //now we move ourself into proc0, and fork proc1
-    sched_init();
+    if(sched_init())
+        //kprintf("process sched init!");
 
     creat_proc0();
 }
@@ -191,7 +193,7 @@ void creat_proc0()
      */
 
     init_proc(&proc0);
-    proc0.intr_contxt = (isr_param){ .registers.esp = KSTACK_TOP - 20,
+    proc0.intr_contxt = (isr_param){ .registers.esp = KSTACK_TOP,
                                   .cs = KCODE_SEG,
                                   .eip = (void*)__proc0,
                                   .ss = KDATA_SEG,
@@ -199,7 +201,7 @@ void creat_proc0()
 
     // 必须在读取eflags之后禁用。否则当进程被调度时，中断依然是关闭的！
     asm volatile("cli");
-    copy_all_page(&proc0, PD_REFERENCED);
+    setup_proc_mem(&proc0, PD_REFERENCED);
 
     // Ok... 首先fork进我们的零号进程，而后由那里，我们fork进init进程。
     /*
@@ -208,18 +210,22 @@ void creat_proc0()
     */
     asm volatile("movl %%cr3, %%eax\n"
                  "movl %%esp, %%ebx\n"
-                 "movl %0, %%cr3\n"
-                 "movl %1, %%esp\n"
+                 "movl %1, %%cr3\n"
+                 "movl %2, %%esp\n"
                  "pushf\n"
-                 "pushl %2\n"
                  "pushl %3\n"
+                 "pushl %4\n"
                  "pushl $0\n"
                  "pushl $0\n"
+                 "movl %%esp, %0\n"
                  "movl %%eax, %%cr3\n"
-                 "movl %%ebx, %%esp\n" ::"r"(proc0.page_table),
-                 "i"(KSTACK_TOP),
-                 "i"(KCODE_SEG),
-                 "r"(proc0.intr_contxt.eip)
+                 "movl %%ebx, %%esp\n"
+                 : "=m"(proc0.intr_contxt.registers.esp)// it must have, it give us the correct esp,
+                 //so we can soft iret get in to push $0 pos, then we esp + 8 get cs:ip->proc0!
+                 : "r"(proc0.page_table),
+                   "i"(KSTACK_TOP),
+                   "i"(KCODE_SEG),
+                   "r"(proc0.intr_contxt.eip)
                  : "%eax", "%ebx", "memory");
 
     // 向调度器注册进程。

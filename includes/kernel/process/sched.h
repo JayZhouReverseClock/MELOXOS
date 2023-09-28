@@ -8,7 +8,7 @@ struct scheduler {
     unsigned int ptable_len;
 };
 
-void sched_init();
+int sched_init();
 void schedule();
 
 

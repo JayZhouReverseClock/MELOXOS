@@ -3,6 +3,7 @@
 #include <libs/mstring.h>
 #include <kernel/memory/region.h>
 #include <syscall/syscall.h>
+#include <libs/mstdio.h>
 
 extern volatile struct m_pcb* __current;//TODO MOVE TO .H AND TODO SCHEDULE
 
@@ -30,52 +31,49 @@ void init_proc(struct m_pcb* pcb)
     pcb->pro_ticks = 10;
 }
 
-void* copy_page(pid_t pid, uintptr_t mount_point)
+void* copy_pagetable(pid_t pid, uintptr_t mount_point)
 {
-    void* pid_ptd = pmm_alloc_page(pid, PP_FGPERSIST);
-    ptd_t* vpid_ptd = vmm_cover_map_page(pid, PD_MOUNT_1, pid_ptd, PG_PREM_RW, PG_PREM_RW);
-    ptd_t* mount_ptd = (ptd_t*)(mount_point | (0x3FFU << 12));
+    void* ptd_pp = pmm_alloc_page(pid, PP_FGPERSIST);
+    pt_t* ptd = vmm_cover_map_page(pid, PG_MOUNT_1, ptd_pp, PG_PREM_RW,PG_PREM_RW);
+    ptd_t* pptd = (ptd_t*)(mount_point | (0x3FF << 12));
 
-    for(size_t i = 0; i < PG_MAX_ENTRIES - 1; i++)
-    {
-        ptd_t mount_ptde = mount_ptd[i];
-        if(!mount_point || !(mount_ptde & PG_PRESENT))
-        {
-            vpid_ptd[i] = mount_ptde;
+    for (size_t i = 0; i < PG_MAX_ENTRIES - 1; i++) {
+        ptd_t ptde = pptd[i];
+        if (!ptde || !(ptde & PG_PRESENT)) {
+            ptd[i] = ptde;
             continue;
         }
 
-        void* pid_pt = pmm_alloc_page(pid, PP_FGPERSIST);
-        pt_t* vpid_pt = vmm_cover_map_page(pid, PG_MOUNT_2, pid_pt, PG_PREM_RW, PG_PREM_RW);
-        pt_t* mount_pt = (ptd_t*)(mount_point | (i << 12));
+        pt_t* ppt = (pt_t*)(mount_point | (i << 12));
+        void* pt_pp = pmm_alloc_page(pid, PP_FGPERSIST);
+        pt_t* pt = vmm_cover_map_page(pid, PG_MOUNT_2, pt_pp, PG_PREM_RW,PG_PREM_RW);
 
-        for(size_t j = 0; j < PG_MAX_ENTRIES; j++)
-        {
-            pt_t mount_pte = mount_pt[j];
-            pmm_ref_page(pid, PG_ENTRY_ADDR(mount_pte));
-            vpid_pt[j] = mount_pte;
+        for (size_t j = 0; j < PG_MAX_ENTRIES; j++) {
+            pt_t pte = ppt[j];
+            pmm_ref_page(pid, PG_ENTRY_ADDR(pte));
+            pt[j] = pte;
         }
 
-        vpid_ptd[i] = (uintptr_t)pid_pt | PG_PREM_RW;
+        ptd[i] = (uintptr_t)pt_pp | PG_PREM_RW;
     }
 
-    vpid_ptd[PG_MAX_ENTRIES - 1] = PDE(T_SELF_REF_PERM, pid_ptd);
+    ptd[PG_MAX_ENTRIES - 1] = PDE(T_SELF_REF_PERM, ptd_pp);
 
-    return pid_ptd;
+    return ptd_pp;
 }
 
-void* copy_all_page(struct m_pcb* proc, uintptr_t usedMnt)
+void* setup_proc_mem(struct m_pcb* proc, uintptr_t usedMnt)
 {
     // copy the entire kernel page table
     pid_t pid = proc->pid;
-    void* pt_copy = copy_page(pid, usedMnt);
+    void* pt_copy = copy_pagetable(pid, usedMnt);
 
     vmm_mount_pd(PD_MOUNT_2, pt_copy); // 将新进程的页表挂载到挂载点#2
 
     // copy the kernel stack
-    for (size_t i = KSTACK_START >> 12; i <= KSTACK_TOP >> 12; i++) {
+    for (size_t i = KSTACK_START >> 12; i <= (KSTACK_TOP >> 12); i++) {
         volatile pt_t* ppte = &PTE_MOUNTED(PD_MOUNT_2, i);
-
+        //kprintf("ppte0x%x", ppte);
         /*
             The TLB caching keep the rewrite to PTE
             from updating. 
@@ -84,6 +82,7 @@ void* copy_all_page(struct m_pcb* proc, uintptr_t usedMnt)
 
         pt_t p = *ppte;
         void* ppa = vmm_dup_page(pid, PG_ENTRY_ADDR(p));
+        //kprintf("ppa0x%x ", ppa);
         *ppte = (p & 0xfff) | (uintptr_t)ppa;
     }
 
@@ -92,7 +91,9 @@ void* copy_all_page(struct m_pcb* proc, uintptr_t usedMnt)
 
     // 定义用户栈区域，但是不分配实际的物理页。我们会在Page fault
     // handler里面实现动态分配物理页的逻辑。
-
+    // if(pid == 0)
+    //     proc->page_table = __current->page_table;
+    // else
     proc->page_table = pt_copy;
 }
 
@@ -106,9 +107,9 @@ pid_t m_fork()
     curr_pcb.parent = __current;
 
 #ifdef USE_KERNEL_PG
-    copy_all_page(&pcb, PD_MOUNT_1); //挂载点#1是当前进程的页表
+    setup_proc_mem(&pcb, PD_MOUNT_1); //挂载点#1是当前进程的页表
 #else
-    copy_all_page(&curr_pcb, PD_REFERENCED);
+    setup_proc_mem(&curr_pcb, PD_REFERENCED);
 #endif
 
         // 根据 mm_region 进一步配置页表

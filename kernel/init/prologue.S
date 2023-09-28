@@ -23,20 +23,27 @@
 
     _after_gdt:
         movl $mb_info, (%esp)
-        call _kernel_init
+        call _vir_kernel_init
 
          /* 
             load new stack point, the 0xffc00000 - 0xffffffff is
             used by page self map,so stack is begin with 0xffbffff0
         */
-        mov $0xffbffff0, %esp
-        call _kernel_finnal_init
+        //we move the release kernel to proccess 0
+        //caus if we release here, we will pagefalut when set process0 mem
+        //mov $0xffbffff0, %esp
+        //call _kernel_finnal_init
 
         subl $6, %esp
         movl $_idt, 2(%esp)
         movw _idt_limit, %ax
         movw %ax, (%esp)
         lidt (%esp)
+
+        //load TSS
+        movw $0x28, %ax
+        ltr %ax
+
         addl $6, %esp
 
         call _kernel_main

@@ -16,7 +16,6 @@ void do_page_fault(unsigned long err_code, unsigned long address)
     }
 
     struct mm_region* hit_region = region_get(__current, ptr);
-
     if (!hit_region) {
         // Into the void...
         goto segv_term;
@@ -62,5 +61,6 @@ segv_term:
             ptr,
             address);
     terminate_proc(MXSEGFAULT);
+    while(1);
     // should not reach
 }

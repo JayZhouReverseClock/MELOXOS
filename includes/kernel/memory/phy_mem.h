@@ -6,6 +6,7 @@
 
 #define PM_PAGE_SIZE            4096
 #define PM_BMP_MAX_SIZE (128 * 1024)
+#define PM_STRUCT_MAX_SIZE (1024 * 1024)
 #define LOOKUP_START 1
 #define PP_FGPERSIST            0x1
 

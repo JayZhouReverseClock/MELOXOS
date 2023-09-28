@@ -18,7 +18,7 @@
 #define PG_TABLE_KERNEL             1
 
 // use table #5
-#define PG_TABLE_STACK              4
+#define PG_TABLE_STACK              8
 // Provided by linker (see linker.ld)
 extern uint8_t virkernel_start;
 extern uint8_t virkernel_end ;
@@ -56,7 +56,7 @@ void save_multiboot_info(multiboot_info_t* mb_info, multiboot_uint8_t* dest)
 
 void init_page(ptd_t* pt)
 {
-    SET_PDE(pt, 0, PDE(PG_PRESENT, pt + PG_MAX_ENTRIES));
+    SET_PDE(pt, 0, PDE(PG_PREM_RW, pt + PG_MAX_ENTRIES));
     ptd_t * tmp_paged_phy_addr = pt;
     ptd_t * tmp_paget_phy_addr = pt + 1024;
     //identity map 1M memory
@@ -83,7 +83,7 @@ void init_page(ptd_t* pt)
     //avoid kernel size > prepared page count
     if(virk_pg_counts > (PG_TABLE_STACK - PG_TABLE_KERNEL) * 1024)
     {
-        while(1);
+        asm ("ud2");
     }
 
     //calcul the phy address

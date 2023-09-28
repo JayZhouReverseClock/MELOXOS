@@ -8,7 +8,7 @@
             "compilerArgs": [
                 "-ffreestanding",
                 "-D__ARCH_IA32",
-                "-D__LUNAIXOS_DEBUG__"
+                "-D__MELOXOS_DEBUG__"
             ],
             "defines": [],
             "compilerPath": "${HOME}/cross-compiler/bin/i686-elf-gcc",

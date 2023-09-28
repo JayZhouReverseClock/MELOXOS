@@ -49,7 +49,6 @@ void intr_handler(isr_param* param)
 
 done:
     // for all external interrupts except the spurious interrupt
-    //  this is required by Intel Manual Vol.3A, section 10.8.1 & 10.8.5
     if (lparam->vector >= EXTERN_INTER) {
         pic_end_eoi();
 	}

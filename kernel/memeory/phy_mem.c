@@ -1,5 +1,7 @@
 #include <kernel/memory/phy_mem.h>
 #include <kernel/memory/page.h>
+#include <status.h>
+#include <kernel/process/peocess.h>
 size_t pg_lookup_ptr;
 uintptr_t max_pg;
 
@@ -87,14 +89,14 @@ int bitmap_pmm_free_page(void* page)
 #endif
 
 #ifdef MEMSTRUCT
-static struct pp_struct pm_table[PM_BMP_MAX_SIZE];
+static struct pp_struct pm_table[PM_STRUCT_MAX_SIZE];
 
 void pmm_init(uintptr_t mem_upper_lim)
 {
     pg_lookup_ptr = LOOKUP_START;
     max_pg = (PG_ALIGN(mem_upper_lim) >> 12);
 
-    for (size_t i = 0; i < PM_BMP_MAX_SIZE; i++) {
+    for (size_t i = 0; i < PM_STRUCT_MAX_SIZE; i++) {
         pm_table[i] = (struct pp_struct) {
             .owner = 0,
             .attr = 0,
@@ -168,9 +170,9 @@ void* pmm_alloc_page(pid_t owner, pp_attr_t attr)
             }
         }
     }
-    // if (!good_page_found) {
-    //     __current->k_status = LXOUTOFMEM;
-    // }
+    if (!good_page_found) {
+        __current->k_status = MXOUTOFMEM;
+    }
     return (void*)good_page_found;
 }
 
@@ -196,24 +198,29 @@ int pmm_free_page(pid_t owner, void* page)
 {
     struct pp_struct* pm = &pm_table[(intptr_t)page >> 12];
     
-    // Oops, double free!
-    if (!(pm->ref_counts)) {
+
+    // // 检查权限，保证：1) 用户只能释放用户页； 2) 内核可释放所有页。
+    // if ((pm->owner & owner) == pm->owner) {
+    //     pm->ref_counts--;
+    //     return 1;
+    // }
+
+        // Is this a MMIO mapping or double free?
+    if (((intptr_t)page >> 12) >= max_pg || !(pm->ref_counts)) {
         return 0;
     }
 
-    // 检查权限，保证：1) 用户只能释放用户页； 2) 内核可释放所有页。
-    if ((pm->owner & owner) == pm->owner) {
-        pm->ref_counts--;
-        return 1;
-    }
-    return 0;
+    // TODO: 检查权限，保证：1) 只有正在使用该页（包括被分享者）的进程可以释放； 2) 内核可释放所有页。
+    pm->ref_counts--;
+    return 1;
+    //return 0;
     
 }
 
 struct pp_struct* pmm_query(void* pa) {
     uint32_t ppn = (uintptr_t)pa >> 12;
     
-    if (ppn >= PM_BMP_MAX_SIZE) {
+    if (ppn >= PM_STRUCT_MAX_SIZE) {
         return NULL;
     }
 
@@ -221,16 +228,16 @@ struct pp_struct* pmm_query(void* pa) {
 }
 
 int pmm_ref_page(pid_t owner, void* page) {
-    (void*) owner;      // TODO: do smth with owner
+    //(void*) owner;      // TODO: do smth with owner
     
     uint32_t ppn = (uintptr_t)page >> 12;
     
-    if (ppn >= PM_BMP_MAX_SIZE) {
+    if (ppn >= PM_STRUCT_MAX_SIZE) {
         return 0;
     }
 
     struct pp_struct* pm = &pm_table[ppn];
-    if (!pm->ref_counts) {
+    if (ppn >= max_pg || !pm->ref_counts) {
         return 0;
     }
 

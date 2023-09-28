@@ -1,8 +1,8 @@
 #include <init/gdt.h>
 #include <init/tss.h>
-#define GDT_ENTRY 5
+#define GDT_ENTRY 6
 
-uint64_t _gdt[5];
+uint64_t _gdt[GDT_ENTRY];
 uint16_t _gdt_limit = sizeof(_gdt) - 1;
 
 extern struct x86_tss _tss;
