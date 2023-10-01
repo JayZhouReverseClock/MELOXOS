@@ -17,8 +17,6 @@ typedef struct {
     uint32_t *pte;
 } v_mapping;
 
-#define K_STACK_SIZE             (64 << 10)
-#define K_STACK_START            ((0xFFBFFFFFU - K_STACK_SIZE) + 1)
 // 页目录的虚拟基地址，可以用来访问到各个PDE
 #define PTD_BASE_VADDR                0xFFFFF000U
 
@@ -48,8 +46,8 @@ typedef struct {
 #define PG_PRESENT              (0x1)
 #define PG_WRITE                (0x1 << 1)
 #define PG_ALLOW_USER           (0x1 << 2)
-#define PG_WRITE_THROUGH      (1 << 3)
-#define PG_DISABLE_CACHE        (1 << 4)
+#define PG_WRITE_THROUGH        (0x1 << 3)
+#define PG_DISABLE_CACHE        (0x1 << 4)
 #define PG_DIRTY(pte)           ((pte & (1 << 6)) >> 6)
 #define PG_ACCESSED(pte)        ((pte & (1 << 5)) >> 5)
 #define PG_PDE_4MB              (1 << 7)

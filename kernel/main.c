@@ -112,11 +112,11 @@ void _vir_kernel_init(unsigned long addr)
     kprintf("[MM] Mapped VGA to %x.\n", VGA_BUFFER_VADDR);
 
     // 为内核创建一个专属栈空间。
-    for (size_t i = 0; i < (K_STACK_SIZE >> 12); i++) {
-        pt_t* test = vmm_alloc_page(KERNEL_PID, (void*)K_STACK_START + (i << 12), NULL, PG_PREM_RW, PG_PREM_RW);
+    for (size_t i = 0; i < (KSTACK_SIZE >> 12); i++) {
+        pt_t* test = vmm_alloc_page(KERNEL_PID, (void*)KSTACK_START + (i << 12), NULL, PG_PREM_RW, PG_PREM_RW);
         //kprintf("[MM] kernel paddr %x", test);
     }
-    kprintf("[MM] Allocated %d pages for stack start at 0x%x\n", K_STACK_SIZE>>12, K_STACK_START);
+    kprintf("[MM] Allocated %d pages for stack start at 0x%x\n", KSTACK_SIZE>>12, KSTACK_START);
 
     //give malloc init
     //mem_init();
@@ -193,7 +193,7 @@ void creat_proc0()
      */
 
     init_proc(&proc0);
-    proc0.intr_contxt = (isr_param){ .registers.esp = KSTACK_TOP,
+    proc0.intr_contxt = (isr_param){ 
                                   .cs = KCODE_SEG,
                                   .eip = (void*)__proc0,
                                   .ss = KDATA_SEG,
@@ -223,7 +223,7 @@ void creat_proc0()
                  : "=m"(proc0.intr_contxt.registers.esp)// it must have, it give us the correct esp,
                  //so we can soft iret get in to push $0 pos, then we esp + 8 get cs:ip->proc0!
                  : "r"(proc0.page_table),
-                   "i"(KSTACK_TOP),
+                   "i"(KSATCK_TOP),
                    "i"(KCODE_SEG),
                    "r"(proc0.intr_contxt.eip)
                  : "%eax", "%ebx", "memory");

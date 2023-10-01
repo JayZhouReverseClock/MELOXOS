@@ -5,7 +5,7 @@
 #define false	0
 #define KSTACK_SIZE             (64 << 10)
 #define KSTACK_START            ((0xFFBFFFFFU - KSTACK_SIZE) + 1)
-#define KSTACK_TOP              0xffbffff0
+#define KSATCK_TOP              0Xffbffff0
 #define HIGHER_HLF_BASE         0xC0000000
 #define MEM_1MB                 0x100000
 

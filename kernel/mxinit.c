@@ -33,25 +33,23 @@ void _mxinit_main()
     kprintf(
       "I am parent, my child (%d) terminated with code: %d.\n", child, status);
 #endif
+    // for(int i = 0; i < 10000; i++);
 
-    for(int i = 0; i < 10000; i++);
+    // for (size_t i = 0; i < 10; i++) {
+    //     pid_t pid = 0;
+    //     if (!(pid = fork())) {
+    //         for(int i = 0; i < 10000; i++);
+    //         if (i == 3) {
+    //             i = *(int*)0xdeadc0de; // seg fault!
+    //         }
+    //         vga_put_char('0' + i);
+    //         vga_put_char('\n');
+    //         _exit(0);
+    //     }
+    //     kprintf("Forked %d\n", pid);
+    // }
 
-    for (size_t i = 0; i < 10; i++) {
-        pid_t pid = 0;
-        if (!(pid = fork())) {
-            for(int i = 0; i < 10000; i++);
-            if (i == 3) {
-                i = *(int*)0xdeadc0de; // seg fault!
-            }
-            vga_put_char('0' + i);
-            vga_put_char('\n');
-            _exit(0);
-        }
-        kprintf("Forked %d\n", pid);
-    }
-
-    char buf[64];
-
+    // char buf[64];
     kprintf("Hello processes!\n");
 
     while(1);

@@ -33,8 +33,11 @@ void init_proc(struct m_pcb* pcb)
 
 void* copy_pagetable(pid_t pid, uintptr_t mount_point)
 {
+    uint32_t a;
+    if(pid == 1)
+        a = cpu_rcr3();
     void* ptd_pp = pmm_alloc_page(pid, PP_FGPERSIST);
-    pt_t* ptd = vmm_cover_map_page(pid, PG_MOUNT_1, ptd_pp, PG_PREM_RW,PG_PREM_RW);
+    pt_t* ptd = vmm_cover_map_page(pid, PD_MOUNT_1, ptd_pp, PG_PREM_RW,PG_PREM_RW);
     ptd_t* pptd = (ptd_t*)(mount_point | (0x3FF << 12));
 
     for (size_t i = 0; i < PG_MAX_ENTRIES - 1; i++) {
@@ -46,19 +49,20 @@ void* copy_pagetable(pid_t pid, uintptr_t mount_point)
 
         pt_t* ppt = (pt_t*)(mount_point | (i << 12));
         void* pt_pp = pmm_alloc_page(pid, PP_FGPERSIST);
+        // if(pid == 1)
+        //     kprintf("index%d,p0pde%x ", i, pt_pp);
         pt_t* pt = vmm_cover_map_page(pid, PG_MOUNT_2, pt_pp, PG_PREM_RW,PG_PREM_RW);
-
         for (size_t j = 0; j < PG_MAX_ENTRIES; j++) {
             pt_t pte = ppt[j];
             pmm_ref_page(pid, PG_ENTRY_ADDR(pte));
             pt[j] = pte;
         }
-
-        ptd[i] = (uintptr_t)pt_pp | PG_PREM_RW;
+        ptd[i] = (uint32_t)pt_pp | PG_PREM_RW;
+        cpu_invplg(ptde);
     }
-
     ptd[PG_MAX_ENTRIES - 1] = PDE(T_SELF_REF_PERM, ptd_pp);
-
+    //pt_t* ppt = (pt_t*)(0xffc00000);
+    //uint32_t b = ppt[1];
     return ptd_pp;
 }
 
@@ -67,12 +71,13 @@ void* setup_proc_mem(struct m_pcb* proc, uintptr_t usedMnt)
     // copy the entire kernel page table
     pid_t pid = proc->pid;
     void* pt_copy = copy_pagetable(pid, usedMnt);
-
+    vmm_unmount_pd(PD_MOUNT_1);
     vmm_mount_pd(PD_MOUNT_2, pt_copy); // 将新进程的页表挂载到挂载点#2
-
+    //kprintf("pid%d, cr3%x ",pid, pt_copy);
     // copy the kernel stack
-    for (size_t i = KSTACK_START >> 12; i <= (KSTACK_TOP >> 12); i++) {
-        volatile pt_t* ppte = &PTE_MOUNTED(PD_MOUNT_2, i);
+    int c = 0;
+    for (size_t i = KSTACK_START >> 12; i <= (KSATCK_TOP >> 12); i++) {
+        volatile pt_t* ppte = &PTE_MOUNTED(PD_MOUNT_2, i);//get the stack page phy addr address point
         //kprintf("ppte0x%x", ppte);
         /*
             The TLB caching keep the rewrite to PTE
@@ -81,6 +86,7 @@ void* setup_proc_mem(struct m_pcb* proc, uintptr_t usedMnt)
         cpu_invplg(ppte);
 
         pt_t p = *ppte;
+        //kprintf("inex %d, padd%x ", c++, p);
         void* ppa = vmm_dup_page(pid, PG_ENTRY_ADDR(p));
         //kprintf("ppa0x%x ", ppa);
         *ppte = (p & 0xfff) | (uintptr_t)ppa;
@@ -149,7 +155,8 @@ pid_t m_fork()
 
 not_copy:
     vmm_unmount_pd(PD_MOUNT_2);
-
+    vmm_unmount_pd(PD_MOUNT_1);
+    vmm_unmount_pd(PG_MOUNT_2);
     // 正如同fork，返回两次。
     curr_pcb.intr_contxt.registers.eax = 0;
 

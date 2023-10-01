@@ -120,7 +120,7 @@ void mem_init()
     //mem_heap = (char*)Malloc(MAX_HEAP);
     mem_brk = mem_heap;
     //mem_max_addr = (char*)(mem_heap + MAX_HEAP);
-    mem_max_addr = (char*)K_STACK_START;
+    mem_max_addr = (char*)KSTACK_START;
     uint8_t* pgaddr = 0;
     if((pgaddr = vmm_alloc_page(KERNEL_PID, mem_brk, NULL, PG_PREM_RW, PG_PREM_RW)) == NULL)
         return;

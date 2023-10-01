@@ -40,14 +40,17 @@ void run(struct m_pcb* proc)
 
     if (__current->page_table != proc->page_table) {
         __current = proc;
-        cpu_lcr3(__current->page_table);
-        // from now on, the we are in the kstack of another process
+        //asm("cli");
+        //__asm__("movl %%ebx,%%cr3"::"b" (__current->page_table));
+        __asm__("mov %0, %%cr3" ::"r"(__current->page_table));
+        //cpu_lcr3(__current->page_table);
+        //asm("sti");
     } else {
         __current = proc;
     }
 
-    io_outb(0x20, 0x20);
-    io_outb(0xa0, 0x20);//EOI end the int
+    // io_outb(0x20, 0x20);
+    // io_outb(0xa0, 0x20);//EOI end the int
 
     asm volatile("pushl %0\n"
                  "jmp soft_iret\n" ::"r"(&__current->intr_contxt)
