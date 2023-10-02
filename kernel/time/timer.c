@@ -31,10 +31,13 @@ static void frequence_set(uint8_t counter_port, uint8_t counter_no,
 
 void timer_init(){
     ticks = 0;
-    kprintf("timer intr start\n");
+    sched_ticks = 10;
+    //kprintf("timer intr start\n");
     frequence_set(CURRENTR0_PORT, CURRENTR0_NO, READ_WRITE_LATCH, CURRENTR_MODE, CURRENTR0_VALUE);
     _set_idt_entry(HARDWARE_TIME_INT, 0x08, &intr_time_handler, 0);
-    intr_subscribe(MELOX_SYS_CALL, do_intr_time_handler);
+    intr_subscribe(HARDWARE_TIME_INT, do_intr_time_handler);
+    uint8_t result = io_inb(0x21);
+    io_outb(0x21, result & 0xfe);
     kprintf("timer init down\n");
     asm("sti");
 }
@@ -42,9 +45,12 @@ void timer_init(){
 void do_intr_time_handler(isr_param int_param)
 {
     ticks++;
-    __current->intr_contxt = int_param;
-    if(__current->pro_ticks == 0)
+    //__current->intr_contxt = int_param;
+    if(sched_ticks == 0)
+    {
+        sched_ticks = 10;
         schedule();
+    }
     else
-        __current->pro_ticks--;
+        sched_ticks--;
 }

@@ -6,7 +6,8 @@
 #include <kernel/process/sched.h>
 #include <syscall/meloxstd.h>
 #include <syscall/syscall.h>
-
+#include <kernel/cpu/io.h>
+//#define FORK_BOMB_DEMO
 void _mxinit_main()
 {
 #ifdef FORK_BOMB_DEMO
@@ -14,7 +15,7 @@ void _mxinit_main()
     for (;;) {
         pid_t p;
         if ((p = fork())) {
-            kprintf(KDEBUG "Pinkie Pie #%d: FUN!\n", p);
+            kprintf("Pinkie Pie #%d: FUN!\n", p);
         }
     }
 #endif
@@ -50,7 +51,8 @@ void _mxinit_main()
     // }
 
     // char buf[64];
-    kprintf("Hello processes!\n");
-
+    kprintf("proc 1!");
+    //io_outb(0x20, 0x20);
+    //io_outb(0xa0, 0x20);//EOI end the int
     while(1);
 }
