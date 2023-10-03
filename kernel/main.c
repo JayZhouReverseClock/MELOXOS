@@ -161,15 +161,15 @@ void _kernel_main()
 
     uintptr_t k_start = vmm_v2p(&virkernel_start);
     kprintf("The kernel's base address mapping: %x->%x\n", &virkernel_start, k_start);
-    // mem_init();
+     //mem_init();
     // pci_init();
     //__asm__("int $0");
     // test malloc & free
 
-    // uint8_t* big_ = k_malloc(1000);
-    // big_[0] = 123;
-    // big_[1] = 23;
-    // big_[2] = 3;
+     //uint8_t* big_ = k_malloc(1000);
+     //big_[0] = 123;
+     //big_[1] = 23;
+     //big_[2] = 3;
 
     //kprintf("malloc %d, %d, %d\n", big_[0], big_[1], big_[2]);
     //malloc_free(big_);
