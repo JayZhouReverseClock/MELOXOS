@@ -8,6 +8,7 @@
 #include <syscall/meloxstd.h>
 #include <kernel/cpu/io.h>
 #include <kernel/cpu/pci.h>
+#include <blk_drive/ata_dev.h>
 extern void __init_phykernel_end;
 void init_platform();
 extern void _mxinit_main(); /* mxinit.c */
@@ -35,6 +36,7 @@ void init_platform()
     timer_init();
     pci_init();
     pci_print_device();
+    ide_init();
     syscall_install();
     // 清除 hhk_init 与前1MiB的映射
     // size_t virk_init_pg_count = ((uintptr_t)(&__init_phykernel_end)) >> 12;

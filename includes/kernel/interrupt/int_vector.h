@@ -26,6 +26,8 @@
 
 #define EXTERN_INTER                    0X20
 #define HARDWARE_TIME_INT               0X20
+#define HDBLK_1                         0x20 + 14
+#define HDBLK_2                         0x20 + 15
 #define MELOX_SYS_CALL                  0X80
 
 #endif

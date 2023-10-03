@@ -51,7 +51,10 @@ void _mxinit_main()
     // }
 
     // char buf[64];
+    //asm("sti");
     kprintf("proc 1!");
+    asm("int $0x20");
+    //fork();
     //io_outb(0x20, 0x20);
     //io_outb(0xa0, 0x20);//EOI end the int
     while(1);

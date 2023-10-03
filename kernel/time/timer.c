@@ -37,9 +37,9 @@ void timer_init(){
     _set_idt_entry(HARDWARE_TIME_INT, 0x08, &intr_time_handler, 0);
     intr_subscribe(HARDWARE_TIME_INT, do_intr_time_handler);
     uint8_t result = io_inb(0x21);
-    io_outb(0x21, result & 0xfe);
+    //io_outb(0x21, result & 0xfe);
     kprintf("timer init down\n");
-    asm("sti");
+    //asm("cli");
 }
 
 void do_intr_time_handler(isr_param int_param)

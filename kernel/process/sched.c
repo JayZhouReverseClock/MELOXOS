@@ -7,6 +7,7 @@
 #include <libs/mstdio.h>
 #include <syscall/syscall.h>
 #include <kernel/memory/malloc.h>
+#include <init/tss.h>
 
 #define MAX_PROCESS 512
 
@@ -73,7 +74,8 @@ void schedule()
     } while (next->state != PROC_STOPPED && ptr != prev_ptr);
 
     sched_ctx.procs_index = ptr;
-
+    if(next->pid == 2)
+        next = &sched_ctx._procs[0];
     run(next);
 }
 

@@ -161,7 +161,6 @@ not_copy:
     curr_pcb.intr_contxt.registers.eax = 0;
 
     push_process(&curr_pcb);
-
     return curr_pcb.pid;
 }
 

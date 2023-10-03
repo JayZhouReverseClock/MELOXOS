@@ -11,6 +11,7 @@
         "phy_mem.h": "c",
         "int_vector.h": "c",
         "interupt_fun.h": "c",
-        "pci.c": "c"
+        "pci.c": "c",
+        "list.h": "c"
     }
 }

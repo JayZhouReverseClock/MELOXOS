@@ -10,9 +10,8 @@
 .globl double_fault,coprocessor_segment_overrun
 .globl invalid_TSS,segment_not_present,stack_segment
 .globl general_protection,coprocessor_error,irq13,reserved,handle_keywords
-.globl intr_time_handler,intr_syscall_handler
+.globl intr_time_handler,intr_syscall_handler,intr_hd_handler1,intr_hd_handler2
 .global soft_iret
-
 .section .text
 intr_time_handler:
 	pushl $0x0
@@ -22,7 +21,14 @@ intr_syscall_handler:
 	pushl $0x0
 	pushl $MELOX_SYS_CALL
 	jmp interrupt_wrapper
-
+intr_hd_handler1:
+	pushl $0x0
+	pushl $HDBLK_1
+	jmp interrupt_wrapper
+intr_hd_handler2:
+	pushl $0x0
+	pushl $HDBLK_2
+	jmp interrupt_wrapper
 interrupt_wrapper:
 	pushl %esp
 
